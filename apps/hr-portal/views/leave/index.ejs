@@ -1,0 +1,39 @@
+<%- include('../partials/head') %>
+<div class="page-header">
+  <h1>My leave</h1>
+  <a class="btn btn-primary" href="/leave/new" data-testid="leave-request">Request leave</a>
+</div>
+<p class="summary" data-testid="leave-balance">
+  <strong data-testid="leave-remaining"><%= remaining %></strong> of <span data-testid="leave-allowance"><%= allowance %></span> days of annual leave remaining. Pending requests count as used until they are decided.
+</p>
+<% if (requests.length === 0) { %>
+<p class="empty" data-testid="leave-empty">You have no leave requests yet.</p>
+<% } else { %>
+<table class="table" data-testid="leave-table">
+  <thead>
+    <tr><th>Type</th><th>Dates</th><th>Working days</th><th>Reason</th><th>Status</th><th>Decision</th><th></th></tr>
+  </thead>
+  <tbody>
+    <% for (const r of requests) { %>
+    <tr data-testid="leave-row-<%= r.id %>" data-leave-id="<%= r.id %>">
+      <td data-testid="leave-type-<%= r.id %>"><%= capitalise(r.type) %></td>
+      <td data-testid="leave-dates-<%= r.id %>"><%= formatDate(r.startDate) %><% if (r.endDate !== r.startDate) { %> to <%= formatDate(r.endDate) %><% } %></td>
+      <td data-testid="leave-days-<%= r.id %>"><%= r.workingDays %></td>
+      <td><%= r.reason %></td>
+      <td><span class="badge badge-<%= r.status %>" data-testid="leave-status-<%= r.id %>"><%= capitalise(r.status) %></span></td>
+      <td class="muted" data-testid="leave-decision-<%= r.id %>">
+        <% if (r.decidedById) { %><%= deciderName(r) %><% if (r.decisionComment) { %>: <%= r.decisionComment %><% } %><% } %>
+      </td>
+      <td class="actions-cell">
+        <% if (r.status === 'pending') { %>
+        <form method="post" action="/leave/<%= r.id %>/cancel">
+          <button type="submit" class="btn btn-small btn-danger" data-testid="leave-cancel-<%= r.id %>">Cancel</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+    <% } %>
+  </tbody>
+</table>
+<% } %>
+<%- include('../partials/foot') %>

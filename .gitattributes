@@ -1,0 +1,8 @@
+# Keep LF line endings in the repository whatever each developer's core.autocrlf says.
+# Prettier, shell scripts and container builds all expect LF. Windows editors handle LF fine.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff2 binary

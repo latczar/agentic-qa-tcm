@@ -1,0 +1,83 @@
+<%- include('../partials/head') %>
+<section class="card">
+  <h1><%= title %></h1>
+  <form method="post" action="<%= mode === 'create' ? '/employees' : `/employees/${id}` %>" data-testid="employee-form" novalidate>
+    <div class="grid-2">
+      <div class="field">
+        <label for="firstName">First name</label>
+        <input id="firstName" name="firstName" type="text" value="<%= values.firstName %>" data-testid="employee-first-name" />
+        <%- include('../partials/field-error', { name: 'firstName', errors }) %>
+      </div>
+      <div class="field">
+        <label for="lastName">Last name</label>
+        <input id="lastName" name="lastName" type="text" value="<%= values.lastName %>" data-testid="employee-last-name" />
+        <%- include('../partials/field-error', { name: 'lastName', errors }) %>
+      </div>
+    </div>
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="text" value="<%= values.email %>" data-testid="employee-email" />
+      <%- include('../partials/field-error', { name: 'email', errors }) %>
+    </div>
+    <div class="field">
+      <label for="jobTitle">Job title</label>
+      <input id="jobTitle" name="jobTitle" type="text" value="<%= values.jobTitle %>" data-testid="employee-job-title" />
+      <%- include('../partials/field-error', { name: 'jobTitle', errors }) %>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="department">Department</label>
+        <select id="department" name="department" data-testid="employee-department">
+          <option value="">Choose a department</option>
+          <% for (const d of departments) { %>
+          <option value="<%= d %>" <%= values.department === d ? 'selected' : '' %>><%= d %></option>
+          <% } %>
+        </select>
+        <%- include('../partials/field-error', { name: 'department', errors }) %>
+      </div>
+      <div class="field">
+        <label for="role">Role</label>
+        <select id="role" name="role" data-testid="employee-role">
+          <% for (const r of roles) { %>
+          <option value="<%= r %>" <%= values.role === r ? 'selected' : '' %>><%= capitalise(r) %></option>
+          <% } %>
+        </select>
+        <%- include('../partials/field-error', { name: 'role', errors }) %>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="managerId">Manager</label>
+        <select id="managerId" name="managerId" data-testid="employee-manager">
+          <option value="">None</option>
+          <% for (const m of managers) { %>
+          <option value="<%= m.id %>" <%= values.managerId === m.id ? 'selected' : '' %>><%= m.firstName %> <%= m.lastName %> (<%= m.jobTitle %>)</option>
+          <% } %>
+        </select>
+        <%- include('../partials/field-error', { name: 'managerId', errors }) %>
+      </div>
+      <div class="field">
+        <label for="startDate">Start date</label>
+        <input id="startDate" name="startDate" type="date" value="<%= values.startDate %>" data-testid="employee-start-date" />
+        <%- include('../partials/field-error', { name: 'startDate', errors }) %>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="annualLeaveAllowance">Annual leave allowance (days)</label>
+        <input id="annualLeaveAllowance" name="annualLeaveAllowance" type="text" inputmode="numeric" value="<%= values.annualLeaveAllowance %>" data-testid="employee-leave-allowance" />
+        <%- include('../partials/field-error', { name: 'annualLeaveAllowance', errors }) %>
+      </div>
+      <div class="field">
+        <label for="password"><%= mode === 'create' ? 'Password' : 'New password (leave blank to keep the current one)' %></label>
+        <input id="password" name="password" type="password" autocomplete="new-password" data-testid="employee-password" />
+        <%- include('../partials/field-error', { name: 'password', errors }) %>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" data-testid="employee-save">Save employee</button>
+      <a class="btn btn-link" href="<%= mode === 'create' ? '/employees' : `/employees/${id}` %>" data-testid="employee-cancel">Cancel</a>
+    </div>
+  </form>
+</section>
+<%- include('../partials/foot') %>

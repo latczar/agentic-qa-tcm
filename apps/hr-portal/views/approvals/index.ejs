@@ -1,0 +1,71 @@
+<%- include('../partials/head') %>
+<h1>Approvals</h1>
+<p class="muted">You can decide on requests from your direct reports<%= currentUser.role === 'admin' ? ' and, as an admin, from everyone else' : '' %>. Nobody can approve their own requests.</p>
+
+<section class="card">
+  <h2>Leave requests <span class="count" data-testid="approvals-leave-count"><%= leave.length %></span></h2>
+  <% if (leave.length === 0) { %>
+  <p class="empty" data-testid="approvals-leave-empty">No leave requests are waiting for you.</p>
+  <% } else { %>
+  <table class="table" data-testid="approvals-leave-table">
+    <thead>
+      <tr><th>Employee</th><th>Type</th><th>Dates</th><th>Days</th><th>Reason</th><th>Balance after</th><th>Decision</th></tr>
+    </thead>
+    <tbody>
+      <% for (const { request: r, requester } of leave) { %>
+      <tr data-testid="approval-leave-row-<%= r.id %>" data-leave-id="<%= r.id %>">
+        <td data-testid="approval-leave-requester-<%= r.id %>"><%= requester.firstName %> <%= requester.lastName %></td>
+        <td><%= capitalise(r.type) %></td>
+        <td><%= formatDate(r.startDate) %><% if (r.endDate !== r.startDate) { %> to <%= formatDate(r.endDate) %><% } %></td>
+        <td><%= r.workingDays %></td>
+        <td><%= r.reason %></td>
+        <td data-testid="approval-leave-balance-<%= r.id %>"><%= r.type === 'annual' ? `${remainingFor(requester)} days` : 'n/a' %></td>
+        <td class="actions-cell decision">
+          <form method="post" action="/approvals/leave/<%= r.id %>/approve">
+            <button type="submit" class="btn btn-small btn-primary" data-testid="approve-leave-<%= r.id %>">Approve</button>
+          </form>
+          <form method="post" action="/approvals/leave/<%= r.id %>/reject" class="reject">
+            <input name="comment" type="text" placeholder="Reason for rejecting" data-testid="reject-leave-comment-<%= r.id %>" />
+            <button type="submit" class="btn btn-small btn-danger" data-testid="reject-leave-<%= r.id %>">Reject</button>
+          </form>
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2>Expense claims <span class="count" data-testid="approvals-expenses-count"><%= expenses.length %></span></h2>
+  <% if (expenses.length === 0) { %>
+  <p class="empty" data-testid="approvals-expenses-empty">No expense claims are waiting for you.</p>
+  <% } else { %>
+  <table class="table" data-testid="approvals-expenses-table">
+    <thead>
+      <tr><th>Employee</th><th>Date</th><th>Category</th><th>Description</th><th class="num">Amount</th><th>Decision</th></tr>
+    </thead>
+    <tbody>
+      <% for (const { expense: x, requester } of expenses) { %>
+      <tr data-testid="approval-expense-row-<%= x.id %>" data-expense-id="<%= x.id %>">
+        <td data-testid="approval-expense-requester-<%= x.id %>"><%= requester.firstName %> <%= requester.lastName %></td>
+        <td><%= formatDate(x.incurredOn) %></td>
+        <td><%= capitalise(x.category) %></td>
+        <td><%= x.description %></td>
+        <td class="num" data-testid="approval-expense-amount-<%= x.id %>"><%= formatPence(x.amountPence) %></td>
+        <td class="actions-cell decision">
+          <form method="post" action="/approvals/expenses/<%= x.id %>/approve">
+            <button type="submit" class="btn btn-small btn-primary" data-testid="approve-expense-<%= x.id %>">Approve</button>
+          </form>
+          <form method="post" action="/approvals/expenses/<%= x.id %>/reject" class="reject">
+            <input name="comment" type="text" placeholder="Reason for rejecting" data-testid="reject-expense-comment-<%= x.id %>" />
+            <button type="submit" class="btn btn-small btn-danger" data-testid="reject-expense-<%= x.id %>">Reject</button>
+          </form>
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
+<%- include('../partials/foot') %>

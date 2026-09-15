@@ -1,0 +1,56 @@
+<%- include('../partials/head') %>
+<div class="page-header">
+  <h1>Employees</h1>
+  <% if (canManage) { %>
+  <a class="btn btn-primary" href="/employees/new" data-testid="employees-add">Add employee</a>
+  <% } %>
+</div>
+<form method="get" action="/employees" class="search" data-testid="employees-search-form">
+  <label for="q" class="visually-hidden">Search employees</label>
+  <input id="q" name="q" type="search" value="<%= q %>" placeholder="Search by name, email, department or job title" data-testid="employees-search-input" />
+  <button type="submit" class="btn" data-testid="employees-search-submit">Search</button>
+  <% if (q) { %><a class="btn btn-link" href="/employees" data-testid="employees-search-clear">Clear</a><% } %>
+</form>
+<p class="muted" data-testid="employees-count"><%= employees.length %> <%= employees.length === 1 ? 'employee' : 'employees' %></p>
+<% if (employees.length === 0) { %>
+<p class="empty" data-testid="employees-empty">No employees match your search.</p>
+<% } else { %>
+<table class="table" data-testid="employees-table">
+  <thead>
+    <tr>
+      <th>Name</th><th>Job title</th><th>Department</th><th>Role</th><th>Manager</th><th>Status</th>
+      <% if (canManage) { %><th>Actions</th><% } %>
+    </tr>
+  </thead>
+  <tbody>
+    <% for (const e of employees) { %>
+    <tr data-testid="employee-row-<%= e.id %>" data-employee-id="<%= e.id %>">
+      <td>
+        <a href="/employees/<%= e.id %>" data-testid="employee-link-<%= e.id %>"><%= e.firstName %> <%= e.lastName %></a>
+        <br /><span class="muted"><%= e.email %></span>
+      </td>
+      <td><%= e.jobTitle %></td>
+      <td><%= e.department %></td>
+      <td><%= capitalise(e.role) %></td>
+      <td><%= managerName(e) %></td>
+      <td><span class="badge badge-<%= e.active ? 'active' : 'inactive' %>" data-testid="employee-status-<%= e.id %>"><%= e.active ? 'Active' : 'Inactive' %></span></td>
+      <% if (canManage) { %>
+      <td class="actions-cell">
+        <a class="btn btn-small" href="/employees/<%= e.id %>/edit" data-testid="employee-edit-<%= e.id %>">Edit</a>
+        <% if (e.active) { %>
+        <form method="post" action="/employees/<%= e.id %>/deactivate">
+          <button type="submit" class="btn btn-small btn-danger" data-testid="employee-deactivate-<%= e.id %>">Deactivate</button>
+        </form>
+        <% } else { %>
+        <form method="post" action="/employees/<%= e.id %>/reactivate">
+          <button type="submit" class="btn btn-small" data-testid="employee-reactivate-<%= e.id %>">Reactivate</button>
+        </form>
+        <% } %>
+      </td>
+      <% } %>
+    </tr>
+    <% } %>
+  </tbody>
+</table>
+<% } %>
+<%- include('../partials/foot') %>

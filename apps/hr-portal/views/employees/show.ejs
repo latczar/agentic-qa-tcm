@@ -1,0 +1,21 @@
+<%- include('../partials/head') %>
+<div class="page-header">
+  <h1 data-testid="employee-name"><%= employee.firstName %> <%= employee.lastName %></h1>
+  <% if (canManage) { %>
+  <a class="btn" href="/employees/<%= employee.id %>/edit" data-testid="employee-edit">Edit</a>
+  <% } %>
+</div>
+<section class="card">
+  <dl class="details" data-testid="employee-details">
+    <dt>Email</dt><dd data-testid="employee-detail-email"><%= employee.email %></dd>
+    <dt>Job title</dt><dd data-testid="employee-detail-job-title"><%= employee.jobTitle %></dd>
+    <dt>Department</dt><dd data-testid="employee-detail-department"><%= employee.department %></dd>
+    <dt>Role</dt><dd data-testid="employee-detail-role"><%= capitalise(employee.role) %></dd>
+    <dt>Manager</dt><dd data-testid="employee-detail-manager"><%= manager ? `${manager.firstName} ${manager.lastName}` : 'None' %></dd>
+    <dt>Start date</dt><dd data-testid="employee-detail-start-date"><%= formatDate(employee.startDate) %></dd>
+    <dt>Annual leave allowance</dt><dd data-testid="employee-detail-allowance"><%= employee.annualLeaveAllowance %> days</dd>
+    <dt>Status</dt><dd><span class="badge badge-<%= employee.active ? 'active' : 'inactive' %>" data-testid="employee-detail-status"><%= employee.active ? 'Active' : 'Inactive' %></span></dd>
+  </dl>
+</section>
+<p><a href="/employees" data-testid="employees-back">Back to employees</a></p>
+<%- include('../partials/foot') %>

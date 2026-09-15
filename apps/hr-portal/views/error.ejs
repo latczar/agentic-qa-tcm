@@ -1,0 +1,8 @@
+<%- include('partials/head') %>
+<section class="card narrow" data-testid="error-page">
+  <p class="muted" data-testid="error-status"><%= status %></p>
+  <h1><%= title %></h1>
+  <p data-testid="error-message"><%= message %></p>
+  <p><a class="btn" href="/" data-testid="error-home">Go to the dashboard</a></p>
+</section>
+<%- include('partials/foot') %>
