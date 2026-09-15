@@ -45,3 +45,29 @@ jobs:
           name: playwright-report
           path: packages/e2e-framework/playwright-report
           retention-days: 7
+
+  mock-tcm-integration:
+    name: mock TCM repository against Postgres
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aiqa
+          POSTGRES_PASSWORD: aiqa
+          POSTGRES_DB: tcm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aiqa -d tcm"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run test:integration

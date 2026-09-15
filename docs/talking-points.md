@@ -84,3 +84,26 @@ The application refuses annual leave in the past. A test that hard-codes October
 
 **What did the negative check show?**
 A deliberately bad spec, raw locators, an absolute URL, `waitForTimeout`, `expect(true)`, a `toBeTruthy` on the title, and no tag, produced one lint error per violation with a message saying what to do instead. Those messages are what the pipeline will feed back to the model on retry.
+
+## Phase 3: mock TCM
+
+**Why does the TCM need Postgres when the HR Portal got away with memory?**
+Because the pipeline's idempotency rests on the claim being one atomic, conditional update. A real database gives that for free and lets an integration test prove it: four concurrent claims, one winner. The HR Portal only needs to be deterministic; the TCM needs to be correct under concurrency.
+
+**Why two actors with separate transition tables?**
+Humans decide whether something should be automated; the pipeline reports what happened. Encoding that as data, one table per actor, means the rule is readable, unit-tested, and enforced by the same function in the API and the UI. A pipeline bug can never mark a case Ready, and a human cannot pull a case out from under a running job.
+
+**What does the version mean?**
+It is the identity of an automation request. It changes when the content changes and when a human asks for automation. It does not change when the pipeline reports. So a duplicate poll of an unchanged case maps to the same (id, version) and is ignored, while a deliberate retry after a failure is a new (id, version) and runs. That one rule covers both the duplicate-event scenario and the retry scenario.
+
+**What happens when the pipeline sends a stale claim?**
+The claim carries the version it read. If the case moved on, the update matches nothing and the caller gets a 409 with the current case in the body, so it can log why and move on rather than guess.
+
+**Why is there a history table?**
+Because the review step is human and humans ask "who moved this and when". Every transition writes a row with the actor, from, to, version and note. It also makes the demo readable: the detail page shows seed, claim, pending review, approve, re-request, in order.
+
+**Why YAML for the seed?**
+Manual test cases are prose with structure, and people will edit them. YAML reads like the document a tester would write, one file per feature, and the loader validates every case on start so a typo fails fast with the file and index in the message. The first run found one: a colon inside a sentence is a nested mapping to YAML unless the value is quoted.
+
+**Why split unit and integration tests?**
+Unit tests for the transition rules and the seed validator run in milliseconds with no database. Integration tests for the repository run against the real Postgres, locally from Docker and in CI from a service container. The split keeps the fast loop fast and still proves the SQL.

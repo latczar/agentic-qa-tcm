@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "-w", "apps/hr-portal"],
       "port": 3000
+    },
+    {
+      "name": "mock-tcm",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "apps/mock-tcm"],
+      "port": 4000
     }
   ]
 }

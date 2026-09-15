@@ -1,0 +1,81 @@
+# Sign-in and session. Written as a QA lead would write them for a manual tester:
+# preconditions, numbered steps with an expected result each, and the data to use.
+
+- id: TC-001
+  title: Employee can sign in and sees their dashboard
+  feature: auth
+  priority: high
+  preconditions: |
+    Seed data is loaded. Dev Patel (dev.patel@harbourhr.example) is an active employee.
+  steps:
+    - action: Open the sign-in page.
+      expected: The sign-in form with Email and Password fields is shown.
+    - action: Enter Dev Patel's email and the password Password123!, then press Sign in.
+      expected: The dashboard opens with the heading "Hello, Dev".
+    - action: Look at the header.
+      expected: It shows the name Dev Patel and the role badge "employee".
+  test_data:
+    email: dev.patel@harbourhr.example
+    password: Password123!
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/auth/login.spec.ts
+
+- id: TC-002
+  title: Wrong password is refused with a message
+  feature: auth
+  priority: high
+  preconditions: |
+    Dev Patel is an active employee.
+  steps:
+    - action: Open the sign-in page and enter Dev Patel's email with the password "not-the-password".
+      expected: Sign-in is refused with the message "Email or password is incorrect."
+    - action: Check the address bar.
+      expected: The user is still on /login.
+  test_data:
+    email: dev.patel@harbourhr.example
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/auth/login.spec.ts
+
+- id: TC-003
+  title: Deactivated account cannot sign in
+  feature: auth
+  priority: high
+  preconditions: |
+    Leon Baptiste (leon.baptiste@harbourhr.example) is deactivated in the seed.
+  steps:
+    - action: Open the sign-in page and enter Leon's email with the correct password Password123!.
+      expected: Sign-in is refused with a message saying the account has been deactivated.
+  test_data:
+    email: leon.baptiste@harbourhr.example
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/auth/login.spec.ts
+
+- id: TC-004
+  title: Signing out returns to the sign-in page
+  feature: auth
+  priority: medium
+  preconditions: |
+    Signed in as any active employee.
+  steps:
+    - action: Press Sign out in the header.
+      expected: The sign-in form is shown and the address is /login.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/auth/login.spec.ts
+
+- id: TC-005
+  title: Visitor is sent to sign in and returned to the page they wanted
+  feature: auth
+  priority: medium
+  preconditions: |
+    Nobody is signed in (fresh browser context). Dev Patel is an active employee.
+  steps:
+    - action: Open /leave directly without signing in.
+      expected: The sign-in page is shown instead.
+    - action: Sign in as Dev Patel.
+      expected: The browser lands on the My leave page, not the dashboard, because that is where the visitor was going.
+    - action: Check the leave balance shown at the top.
+      expected: It reads 20 of 25 days remaining.
+  test_data:
+    email: dev.patel@harbourhr.example
+    password: Password123!
+  automation_status: READY_FOR_AUTOMATION

@@ -1,0 +1,42 @@
+<%- include('../partials/head') %>
+<h1>Test cases</h1>
+<form method="get" action="/cases" class="filters" data-testid="tcm-filters">
+  <label>Status
+    <select name="status" data-testid="tcm-filter-status">
+      <option value="">All</option>
+      <% for (const s of statuses) { %>
+      <option value="<%= s %>" <%= filter.status === s ? 'selected' : '' %>><%= statusLabel(s) %></option>
+      <% } %>
+    </select>
+  </label>
+  <label>Feature
+    <select name="feature" data-testid="tcm-filter-feature">
+      <option value="">All</option>
+      <% for (const f of features) { %>
+      <option value="<%= f %>" <%= filter.feature === f ? 'selected' : '' %>><%= f %></option>
+      <% } %>
+    </select>
+  </label>
+  <button type="submit" class="btn" data-testid="tcm-filter-apply">Filter</button>
+  <a class="btn btn-link" href="/cases">Clear</a>
+</form>
+<p class="muted" data-testid="tcm-case-count"><%= cases.length %> <%= cases.length === 1 ? 'case' : 'cases' %></p>
+<table class="table" data-testid="tcm-cases-table">
+  <thead>
+    <tr><th>Id</th><th>Title</th><th>Feature</th><th>Priority</th><th>Automation status</th><th>Version</th><th>Automated by</th></tr>
+  </thead>
+  <tbody>
+    <% for (const c of cases) { %>
+    <tr data-testid="tcm-case-row-<%= c.id %>">
+      <td><a href="/cases/<%= c.id %>" data-testid="tcm-case-link-<%= c.id %>"><%= c.id %></a></td>
+      <td><%= c.title %></td>
+      <td><%= c.feature %></td>
+      <td><%= c.priority %></td>
+      <td><span class="badge badge-<%= c.automation_status %>" data-testid="tcm-case-status-<%= c.id %>"><%= statusLabel(c.automation_status) %></span></td>
+      <td data-testid="tcm-case-version-<%= c.id %>"><%= c.version %></td>
+      <td class="muted small"><%= c.automation_ref ?? '' %></td>
+    </tr>
+    <% } %>
+  </tbody>
+</table>
+<%- include('../partials/foot') %>
