@@ -1,0 +1,3051 @@
+{
+  "schemaVersion": 1,
+  "frameworkRoot": "packages/e2e-framework",
+  "testModule": "src/fixtures/test.ts",
+  "conventionsFile": "CONVENTIONS.md",
+  "app": [
+    {
+      "field": "approvals",
+      "className": "ApprovalsPage"
+    },
+    {
+      "field": "dashboard",
+      "className": "DashboardPage"
+    },
+    {
+      "field": "employeeDetail",
+      "className": "EmployeeDetailPage"
+    },
+    {
+      "field": "employeeForm",
+      "className": "EmployeeFormPage"
+    },
+    {
+      "field": "employees",
+      "className": "EmployeesPage"
+    },
+    {
+      "field": "errorPage",
+      "className": "ErrorPage"
+    },
+    {
+      "field": "expenseForm",
+      "className": "ExpenseFormPage"
+    },
+    {
+      "field": "expenses",
+      "className": "ExpensesPage"
+    },
+    {
+      "field": "leave",
+      "className": "LeavePage"
+    },
+    {
+      "field": "leaveForm",
+      "className": "LeaveFormPage"
+    },
+    {
+      "field": "login",
+      "className": "LoginPage"
+    }
+  ],
+  "pageObjects": [
+    {
+      "name": "ApprovalsPage",
+      "file": "src/pages/approvals.page.ts",
+      "description": "The approvals queue at /approvals. Managers and admins only.",
+      "extends": "BasePage",
+      "appField": "approvals",
+      "locators": [
+        {
+          "name": "leaveCount",
+          "testId": "approvals-leave-count",
+          "expression": "page.getByTestId('approvals-leave-count')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expensesCount",
+          "testId": "approvals-expenses-count",
+          "expression": "page.getByTestId('approvals-expenses-count')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "leaveEmptyMessage",
+          "testId": "approvals-leave-empty",
+          "expression": "page.getByTestId('approvals-leave-empty')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expensesEmptyMessage",
+          "testId": "approvals-expenses-empty",
+          "expression": "page.getByTestId('approvals-expenses-empty')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navDashboard",
+          "testId": "nav-dashboard",
+          "expression": "page.getByTestId('nav-dashboard')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navEmployees",
+          "testId": "nav-employees",
+          "expression": "page.getByTestId('nav-employees')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navLeave",
+          "testId": "nav-leave",
+          "expression": "page.getByTestId('nav-leave')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navExpenses",
+          "testId": "nav-expenses",
+          "expression": "page.getByTestId('nav-expenses')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navApprovals",
+          "testId": "nav-approvals",
+          "expression": "page.getByTestId('nav-approvals')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserName",
+          "testId": "nav-user-name",
+          "expression": "page.getByTestId('nav-user-name')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserRole",
+          "testId": "nav-user-role",
+          "expression": "page.getByTestId('nav-user-role')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "signOutButton",
+          "testId": "nav-sign-out",
+          "expression": "page.getByTestId('nav-sign-out')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "successMessage",
+          "testId": "flash-success",
+          "expression": "page.getByTestId('flash-success')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "errorMessage",
+          "testId": "flash-error",
+          "expression": "page.getByTestId('flash-error')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        }
+      ],
+      "methods": [
+        {
+          "name": "goto",
+          "description": "Opens the queue. Employees get a 403 page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "navigation",
+          "inheritedFrom": null
+        },
+        {
+          "name": "leaveRow",
+          "description": "The queue row for a leave request. Present only while it awaits this approver.",
+          "params": [
+            {
+              "name": "requestId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expenseRow",
+          "description": "The queue row for an expense claim. Present only while it awaits this approver.",
+          "params": [
+            {
+              "name": "expenseId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "approveLeave",
+          "description": "Approves a leave request.",
+          "params": [
+            {
+              "name": "requestId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "rejectLeave",
+          "description": "Rejects a leave request with a comment. An empty comment is refused by the application.",
+          "params": [
+            {
+              "name": "requestId",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "comment",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "approveExpense",
+          "description": "Approves an expense claim.",
+          "params": [
+            {
+              "name": "expenseId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "rejectExpense",
+          "description": "Rejects an expense claim with a comment. An empty comment is refused by the application.",
+          "params": [
+            {
+              "name": "expenseId",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "comment",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectLeaveAwaiting",
+          "description": "Asserts a leave request is in this approver's queue.",
+          "params": [
+            {
+              "name": "requestId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectLeaveNotAwaiting",
+          "description": "Asserts a leave request is not in this approver's queue, decided or never theirs to decide.",
+          "params": [
+            {
+              "name": "requestId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectExpenseAwaiting",
+          "description": "Asserts an expense claim is in this approver's queue.",
+          "params": [
+            {
+              "name": "expenseId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectExpenseNotAwaiting",
+          "description": "Asserts an expense claim is not in this approver's queue.",
+          "params": [
+            {
+              "name": "expenseId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectCounts",
+          "description": "Asserts the counters in the two section headings.",
+          "params": [
+            {
+              "name": "leave",
+              "type": "number",
+              "optional": false
+            },
+            {
+              "name": "expenses",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "signOut",
+          "description": "Signs the current user out. Lands on the sign-in page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSuccess",
+          "description": "Asserts the green banner shown after a successful action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectError",
+          "description": "Asserts the red banner shown after a refused action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSignedInAs",
+          "description": "Asserts the header shows the given person as signed in.",
+          "params": [
+            {
+              "name": "firstName",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "role",
+              "type": "'employee' | 'manager' | 'admin'",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        }
+      ]
+    },
+    {
+      "name": "BasePage",
+      "file": "src/pages/base.page.ts",
+      "description": "Shared chrome present on every signed-in page: navigation, current user, flash messages. Page objects expose locators as readonly fields and behaviour as methods. Assertion helpers are named expect* so lint can recognise them as state assertions.",
+      "extends": null,
+      "appField": null,
+      "locators": [
+        {
+          "name": "navDashboard",
+          "testId": "nav-dashboard",
+          "expression": "page.getByTestId('nav-dashboard')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navEmployees",
+          "testId": "nav-employees",
+          "expression": "page.getByTestId('nav-employees')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navLeave",
+          "testId": "nav-leave",
+          "expression": "page.getByTestId('nav-leave')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navExpenses",
+          "testId": "nav-expenses",
+          "expression": "page.getByTestId('nav-expenses')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navApprovals",
+          "testId": "nav-approvals",
+          "expression": "page.getByTestId('nav-approvals')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "currentUserName",
+          "testId": "nav-user-name",
+          "expression": "page.getByTestId('nav-user-name')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "currentUserRole",
+          "testId": "nav-user-role",
+          "expression": "page.getByTestId('nav-user-role')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "signOutButton",
+          "testId": "nav-sign-out",
+          "expression": "page.getByTestId('nav-sign-out')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "successMessage",
+          "testId": "flash-success",
+          "expression": "page.getByTestId('flash-success')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "errorMessage",
+          "testId": "flash-error",
+          "expression": "page.getByTestId('flash-error')",
+          "description": "",
+          "inheritedFrom": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "signOut",
+          "description": "Signs the current user out. Lands on the sign-in page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectSuccess",
+          "description": "Asserts the green banner shown after a successful action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectError",
+          "description": "Asserts the red banner shown after a refused action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectSignedInAs",
+          "description": "Asserts the header shows the given person as signed in.",
+          "params": [
+            {
+              "name": "firstName",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "role",
+              "type": "'employee' | 'manager' | 'admin'",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        }
+      ]
+    },
+    {
+      "name": "DashboardPage",
+      "file": "src/pages/dashboard.page.ts",
+      "description": "The landing page after sign-in, at /.",
+      "extends": "BasePage",
+      "appField": "dashboard",
+      "locators": [
+        {
+          "name": "heading",
+          "testId": "dashboard-heading",
+          "expression": "page.getByTestId('dashboard-heading')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "remainingLeave",
+          "testId": null,
+          "expression": "page.getByTestId('stat-remaining-leave').locator('.stat-value')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "pendingLeave",
+          "testId": null,
+          "expression": "page.getByTestId('stat-pending-leave').locator('.stat-value')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "pendingExpenses",
+          "testId": null,
+          "expression": "page.getByTestId('stat-pending-expenses').locator('.stat-value')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "awaitingMyApproval",
+          "testId": null,
+          "expression": "page.getByTestId('stat-awaiting-my-approval').locator('.stat-value')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "requestLeaveButton",
+          "testId": "dashboard-request-leave",
+          "expression": "page.getByTestId('dashboard-request-leave')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "submitExpenseButton",
+          "testId": "dashboard-submit-expense",
+          "expression": "page.getByTestId('dashboard-submit-expense')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "reviewApprovalsButton",
+          "testId": "dashboard-go-to-approvals",
+          "expression": "page.getByTestId('dashboard-go-to-approvals')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navDashboard",
+          "testId": "nav-dashboard",
+          "expression": "page.getByTestId('nav-dashboard')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navEmployees",
+          "testId": "nav-employees",
+          "expression": "page.getByTestId('nav-employees')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navLeave",
+          "testId": "nav-leave",
+          "expression": "page.getByTestId('nav-leave')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navExpenses",
+          "testId": "nav-expenses",
+          "expression": "page.getByTestId('nav-expenses')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navApprovals",
+          "testId": "nav-approvals",
+          "expression": "page.getByTestId('nav-approvals')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserName",
+          "testId": "nav-user-name",
+          "expression": "page.getByTestId('nav-user-name')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserRole",
+          "testId": "nav-user-role",
+          "expression": "page.getByTestId('nav-user-role')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "signOutButton",
+          "testId": "nav-sign-out",
+          "expression": "page.getByTestId('nav-sign-out')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "successMessage",
+          "testId": "flash-success",
+          "expression": "page.getByTestId('flash-success')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "errorMessage",
+          "testId": "flash-error",
+          "expression": "page.getByTestId('flash-error')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        }
+      ],
+      "methods": [
+        {
+          "name": "goto",
+          "description": "Opens the dashboard. Redirects to sign-in when nobody is signed in.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "navigation",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectLoadedFor",
+          "description": "Asserts the dashboard greets the given person.",
+          "params": [
+            {
+              "name": "firstName",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectRemainingLeave",
+          "description": "Asserts the remaining annual leave figure.",
+          "params": [
+            {
+              "name": "days",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectAwaitingMyApproval",
+          "description": "Asserts how many items are waiting for the signed-in manager or admin.",
+          "params": [
+            {
+              "name": "count",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "signOut",
+          "description": "Signs the current user out. Lands on the sign-in page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSuccess",
+          "description": "Asserts the green banner shown after a successful action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectError",
+          "description": "Asserts the red banner shown after a refused action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSignedInAs",
+          "description": "Asserts the header shows the given person as signed in.",
+          "params": [
+            {
+              "name": "firstName",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "role",
+              "type": "'employee' | 'manager' | 'admin'",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        }
+      ]
+    },
+    {
+      "name": "EmployeeDetailPage",
+      "file": "src/pages/employees.page.ts",
+      "description": "One employee's detail page at /employees/:id.",
+      "extends": "BasePage",
+      "appField": "employeeDetail",
+      "locators": [
+        {
+          "name": "name",
+          "testId": "employee-name",
+          "expression": "page.getByTestId('employee-name')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "editButton",
+          "testId": "employee-edit",
+          "expression": "page.getByTestId('employee-edit')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navDashboard",
+          "testId": "nav-dashboard",
+          "expression": "page.getByTestId('nav-dashboard')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navEmployees",
+          "testId": "nav-employees",
+          "expression": "page.getByTestId('nav-employees')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navLeave",
+          "testId": "nav-leave",
+          "expression": "page.getByTestId('nav-leave')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navExpenses",
+          "testId": "nav-expenses",
+          "expression": "page.getByTestId('nav-expenses')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navApprovals",
+          "testId": "nav-approvals",
+          "expression": "page.getByTestId('nav-approvals')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserName",
+          "testId": "nav-user-name",
+          "expression": "page.getByTestId('nav-user-name')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserRole",
+          "testId": "nav-user-role",
+          "expression": "page.getByTestId('nav-user-role')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "signOutButton",
+          "testId": "nav-sign-out",
+          "expression": "page.getByTestId('nav-sign-out')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "successMessage",
+          "testId": "flash-success",
+          "expression": "page.getByTestId('flash-success')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "errorMessage",
+          "testId": "flash-error",
+          "expression": "page.getByTestId('flash-error')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        }
+      ],
+      "methods": [
+        {
+          "name": "goto",
+          "description": "Opens an employee's detail page directly.",
+          "params": [
+            {
+              "name": "employeeId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "navigation",
+          "inheritedFrom": null
+        },
+        {
+          "name": "detail",
+          "description": "A single detail value: email, job-title, department, role, manager, start-date, allowance, status.",
+          "params": [
+            {
+              "name": "field",
+              "type": "| 'email' | 'job-title' | 'department' | 'role' | 'manager' | 'start-date' | 'allowance' | 'status'",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectName",
+          "description": "Asserts the page is for the named person.",
+          "params": [
+            {
+              "name": "fullName",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectDetail",
+          "description": "Asserts a detail value.",
+          "params": [
+            {
+              "name": "field",
+              "type": "Parameters<EmployeeDetailPage['detail']>[0]",
+              "optional": false
+            },
+            {
+              "name": "value",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "signOut",
+          "description": "Signs the current user out. Lands on the sign-in page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSuccess",
+          "description": "Asserts the green banner shown after a successful action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectError",
+          "description": "Asserts the red banner shown after a refused action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSignedInAs",
+          "description": "Asserts the header shows the given person as signed in.",
+          "params": [
+            {
+              "name": "firstName",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "role",
+              "type": "'employee' | 'manager' | 'admin'",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        }
+      ]
+    },
+    {
+      "name": "EmployeeFormPage",
+      "file": "src/pages/employees.page.ts",
+      "description": "The add and edit employee form at /employees/new and /employees/:id/edit. Admin only.",
+      "extends": "BasePage",
+      "appField": "employeeForm",
+      "locators": [
+        {
+          "name": "firstNameInput",
+          "testId": "employee-first-name",
+          "expression": "page.getByTestId('employee-first-name')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "lastNameInput",
+          "testId": "employee-last-name",
+          "expression": "page.getByTestId('employee-last-name')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "emailInput",
+          "testId": "employee-email",
+          "expression": "page.getByTestId('employee-email')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "jobTitleInput",
+          "testId": "employee-job-title",
+          "expression": "page.getByTestId('employee-job-title')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "departmentSelect",
+          "testId": "employee-department",
+          "expression": "page.getByTestId('employee-department')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "roleSelect",
+          "testId": "employee-role",
+          "expression": "page.getByTestId('employee-role')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "managerSelect",
+          "testId": "employee-manager",
+          "expression": "page.getByTestId('employee-manager')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "startDateInput",
+          "testId": "employee-start-date",
+          "expression": "page.getByTestId('employee-start-date')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "allowanceInput",
+          "testId": "employee-leave-allowance",
+          "expression": "page.getByTestId('employee-leave-allowance')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "passwordInput",
+          "testId": "employee-password",
+          "expression": "page.getByTestId('employee-password')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "saveButton",
+          "testId": "employee-save",
+          "expression": "page.getByTestId('employee-save')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navDashboard",
+          "testId": "nav-dashboard",
+          "expression": "page.getByTestId('nav-dashboard')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navEmployees",
+          "testId": "nav-employees",
+          "expression": "page.getByTestId('nav-employees')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navLeave",
+          "testId": "nav-leave",
+          "expression": "page.getByTestId('nav-leave')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navExpenses",
+          "testId": "nav-expenses",
+          "expression": "page.getByTestId('nav-expenses')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navApprovals",
+          "testId": "nav-approvals",
+          "expression": "page.getByTestId('nav-approvals')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserName",
+          "testId": "nav-user-name",
+          "expression": "page.getByTestId('nav-user-name')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserRole",
+          "testId": "nav-user-role",
+          "expression": "page.getByTestId('nav-user-role')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "signOutButton",
+          "testId": "nav-sign-out",
+          "expression": "page.getByTestId('nav-sign-out')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "successMessage",
+          "testId": "flash-success",
+          "expression": "page.getByTestId('flash-success')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "errorMessage",
+          "testId": "flash-error",
+          "expression": "page.getByTestId('flash-error')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        }
+      ],
+      "methods": [
+        {
+          "name": "gotoNew",
+          "description": "Opens the add-employee form directly. Non-admins get a 403 page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "navigation",
+          "inheritedFrom": null
+        },
+        {
+          "name": "fieldError",
+          "description": "The validation message under a field, present only when that field failed.",
+          "params": [
+            {
+              "name": "field",
+              "type": "EmployeeField",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "fill",
+          "description": "Fills every field of the form. Pass the whole employee; nothing is left at its default.",
+          "params": [
+            {
+              "name": "details",
+              "type": "EmployeeDetails",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "save",
+          "description": "Submits the form. On success the detail page opens; on failure the form re-renders with errors.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectFieldError",
+          "description": "Asserts a field shows the given validation message.",
+          "params": [
+            {
+              "name": "field",
+              "type": "EmployeeField",
+              "optional": false
+            },
+            {
+              "name": "message",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "signOut",
+          "description": "Signs the current user out. Lands on the sign-in page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSuccess",
+          "description": "Asserts the green banner shown after a successful action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectError",
+          "description": "Asserts the red banner shown after a refused action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSignedInAs",
+          "description": "Asserts the header shows the given person as signed in.",
+          "params": [
+            {
+              "name": "firstName",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "role",
+              "type": "'employee' | 'manager' | 'admin'",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        }
+      ]
+    },
+    {
+      "name": "EmployeesPage",
+      "file": "src/pages/employees.page.ts",
+      "description": "The employee directory at /employees.",
+      "extends": "BasePage",
+      "appField": "employees",
+      "locators": [
+        {
+          "name": "addButton",
+          "testId": "employees-add",
+          "expression": "page.getByTestId('employees-add')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "searchInput",
+          "testId": "employees-search-input",
+          "expression": "page.getByTestId('employees-search-input')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "searchButton",
+          "testId": "employees-search-submit",
+          "expression": "page.getByTestId('employees-search-submit')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "resultCount",
+          "testId": "employees-count",
+          "expression": "page.getByTestId('employees-count')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "table",
+          "testId": "employees-table",
+          "expression": "page.getByTestId('employees-table')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "emptyMessage",
+          "testId": "employees-empty",
+          "expression": "page.getByTestId('employees-empty')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navDashboard",
+          "testId": "nav-dashboard",
+          "expression": "page.getByTestId('nav-dashboard')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navEmployees",
+          "testId": "nav-employees",
+          "expression": "page.getByTestId('nav-employees')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navLeave",
+          "testId": "nav-leave",
+          "expression": "page.getByTestId('nav-leave')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navExpenses",
+          "testId": "nav-expenses",
+          "expression": "page.getByTestId('nav-expenses')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navApprovals",
+          "testId": "nav-approvals",
+          "expression": "page.getByTestId('nav-approvals')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserName",
+          "testId": "nav-user-name",
+          "expression": "page.getByTestId('nav-user-name')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserRole",
+          "testId": "nav-user-role",
+          "expression": "page.getByTestId('nav-user-role')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "signOutButton",
+          "testId": "nav-sign-out",
+          "expression": "page.getByTestId('nav-sign-out')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "successMessage",
+          "testId": "flash-success",
+          "expression": "page.getByTestId('flash-success')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "errorMessage",
+          "testId": "flash-error",
+          "expression": "page.getByTestId('flash-error')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        }
+      ],
+      "methods": [
+        {
+          "name": "goto",
+          "description": "Opens the directory.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "navigation",
+          "inheritedFrom": null
+        },
+        {
+          "name": "row",
+          "description": "The table row for an employee id, for example emp-004.",
+          "params": [
+            {
+              "name": "employeeId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "statusBadge",
+          "description": "The Active or Inactive badge for an employee.",
+          "params": [
+            {
+              "name": "employeeId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "search",
+          "description": "Filters the directory by name, email, department or job title.",
+          "params": [
+            {
+              "name": "term",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "openAddForm",
+          "description": "Opens the add-employee form. Admin only.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "open",
+          "description": "Opens an employee's detail page from the directory.",
+          "params": [
+            {
+              "name": "employeeId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "openEditForm",
+          "description": "Opens the edit form for an employee. Admin only.",
+          "params": [
+            {
+              "name": "employeeId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "deactivate",
+          "description": "Deactivates an employee from the directory. Admin only.",
+          "params": [
+            {
+              "name": "employeeId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "reactivate",
+          "description": "Reactivates an employee from the directory. Admin only.",
+          "params": [
+            {
+              "name": "employeeId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectListed",
+          "description": "Asserts an employee appears in the directory, optionally checking the displayed name.",
+          "params": [
+            {
+              "name": "employeeId",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectStatus",
+          "description": "Asserts an employee's status badge.",
+          "params": [
+            {
+              "name": "employeeId",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "status",
+              "type": "'Active' | 'Inactive'",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectResultCount",
+          "description": "Asserts the \"N employees\" count under the search box.",
+          "params": [
+            {
+              "name": "count",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "signOut",
+          "description": "Signs the current user out. Lands on the sign-in page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSuccess",
+          "description": "Asserts the green banner shown after a successful action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectError",
+          "description": "Asserts the red banner shown after a refused action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSignedInAs",
+          "description": "Asserts the header shows the given person as signed in.",
+          "params": [
+            {
+              "name": "firstName",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "role",
+              "type": "'employee' | 'manager' | 'admin'",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        }
+      ]
+    },
+    {
+      "name": "ErrorPage",
+      "file": "src/pages/error.page.ts",
+      "description": "The page the application renders for 403, 404 and 500.",
+      "extends": null,
+      "appField": "errorPage",
+      "locators": [
+        {
+          "name": "status",
+          "testId": "error-status",
+          "expression": "page.getByTestId('error-status')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "message",
+          "testId": "error-message",
+          "expression": "page.getByTestId('error-message')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "homeLink",
+          "testId": "error-home",
+          "expression": "page.getByTestId('error-home')",
+          "description": "",
+          "inheritedFrom": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "expectStatus",
+          "description": "Asserts the error page is showing with the given HTTP status.",
+          "params": [
+            {
+              "name": "status",
+              "type": "403 | 404 | 500",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        }
+      ]
+    },
+    {
+      "name": "ExpenseFormPage",
+      "file": "src/pages/expenses.page.ts",
+      "description": "The submit-expense form at /expenses/new.",
+      "extends": "BasePage",
+      "appField": "expenseForm",
+      "locators": [
+        {
+          "name": "categorySelect",
+          "testId": "expense-category",
+          "expression": "page.getByTestId('expense-category')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "amountInput",
+          "testId": "expense-amount",
+          "expression": "page.getByTestId('expense-amount')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "descriptionInput",
+          "testId": "expense-description",
+          "expression": "page.getByTestId('expense-description')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "incurredOnInput",
+          "testId": "expense-incurred-on",
+          "expression": "page.getByTestId('expense-incurred-on')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "submitButton",
+          "testId": "expense-submit",
+          "expression": "page.getByTestId('expense-submit')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navDashboard",
+          "testId": "nav-dashboard",
+          "expression": "page.getByTestId('nav-dashboard')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navEmployees",
+          "testId": "nav-employees",
+          "expression": "page.getByTestId('nav-employees')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navLeave",
+          "testId": "nav-leave",
+          "expression": "page.getByTestId('nav-leave')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navExpenses",
+          "testId": "nav-expenses",
+          "expression": "page.getByTestId('nav-expenses')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navApprovals",
+          "testId": "nav-approvals",
+          "expression": "page.getByTestId('nav-approvals')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserName",
+          "testId": "nav-user-name",
+          "expression": "page.getByTestId('nav-user-name')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserRole",
+          "testId": "nav-user-role",
+          "expression": "page.getByTestId('nav-user-role')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "signOutButton",
+          "testId": "nav-sign-out",
+          "expression": "page.getByTestId('nav-sign-out')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "successMessage",
+          "testId": "flash-success",
+          "expression": "page.getByTestId('flash-success')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "errorMessage",
+          "testId": "flash-error",
+          "expression": "page.getByTestId('flash-error')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        }
+      ],
+      "methods": [
+        {
+          "name": "goto",
+          "description": "Opens the form directly.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "navigation",
+          "inheritedFrom": null
+        },
+        {
+          "name": "fieldError",
+          "description": "The validation message under a field, present only when that field failed.",
+          "params": [
+            {
+              "name": "field",
+              "type": "ExpenseField",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "submitClaim",
+          "description": "Fills the form and submits it. On success the list opens with a green banner.",
+          "params": [
+            {
+              "name": "details",
+              "type": "ExpenseClaimDetails",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectFieldError",
+          "description": "Asserts a field shows the given validation message.",
+          "params": [
+            {
+              "name": "field",
+              "type": "ExpenseField",
+              "optional": false
+            },
+            {
+              "name": "message",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "signOut",
+          "description": "Signs the current user out. Lands on the sign-in page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSuccess",
+          "description": "Asserts the green banner shown after a successful action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectError",
+          "description": "Asserts the red banner shown after a refused action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSignedInAs",
+          "description": "Asserts the header shows the given person as signed in.",
+          "params": [
+            {
+              "name": "firstName",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "role",
+              "type": "'employee' | 'manager' | 'admin'",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        }
+      ]
+    },
+    {
+      "name": "ExpensesPage",
+      "file": "src/pages/expenses.page.ts",
+      "description": "The signed-in employee's own expense claims at /expenses.",
+      "extends": "BasePage",
+      "appField": "expenses",
+      "locators": [
+        {
+          "name": "newClaimButton",
+          "testId": "expense-submit-new",
+          "expression": "page.getByTestId('expense-submit-new')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "pendingTotal",
+          "testId": "expenses-pending-total",
+          "expression": "page.getByTestId('expenses-pending-total')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "table",
+          "testId": "expenses-table",
+          "expression": "page.getByTestId('expenses-table')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "emptyMessage",
+          "testId": "expenses-empty",
+          "expression": "page.getByTestId('expenses-empty')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navDashboard",
+          "testId": "nav-dashboard",
+          "expression": "page.getByTestId('nav-dashboard')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navEmployees",
+          "testId": "nav-employees",
+          "expression": "page.getByTestId('nav-employees')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navLeave",
+          "testId": "nav-leave",
+          "expression": "page.getByTestId('nav-leave')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navExpenses",
+          "testId": "nav-expenses",
+          "expression": "page.getByTestId('nav-expenses')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navApprovals",
+          "testId": "nav-approvals",
+          "expression": "page.getByTestId('nav-approvals')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserName",
+          "testId": "nav-user-name",
+          "expression": "page.getByTestId('nav-user-name')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserRole",
+          "testId": "nav-user-role",
+          "expression": "page.getByTestId('nav-user-role')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "signOutButton",
+          "testId": "nav-sign-out",
+          "expression": "page.getByTestId('nav-sign-out')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "successMessage",
+          "testId": "flash-success",
+          "expression": "page.getByTestId('flash-success')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "errorMessage",
+          "testId": "flash-error",
+          "expression": "page.getByTestId('flash-error')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        }
+      ],
+      "methods": [
+        {
+          "name": "goto",
+          "description": "Opens my expenses.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "navigation",
+          "inheritedFrom": null
+        },
+        {
+          "name": "row",
+          "description": "The row for an expense id, for example ex-001. The first claim a test creates is ex-101.",
+          "params": [
+            {
+              "name": "expenseId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "statusBadge",
+          "description": "The status badge for a claim.",
+          "params": [
+            {
+              "name": "expenseId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "openClaimForm",
+          "description": "Opens the new-claim form from the list.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectClaimListed",
+          "description": "Asserts a claim is listed with the formatted amount, for example £42.50, and a status.",
+          "params": [
+            {
+              "name": "expenseId",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "amount",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "status",
+              "type": "ExpenseStatus",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectPendingTotal",
+          "description": "Asserts the \"Awaiting approval\" total, for example £42.50.",
+          "params": [
+            {
+              "name": "amount",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "signOut",
+          "description": "Signs the current user out. Lands on the sign-in page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSuccess",
+          "description": "Asserts the green banner shown after a successful action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectError",
+          "description": "Asserts the red banner shown after a refused action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSignedInAs",
+          "description": "Asserts the header shows the given person as signed in.",
+          "params": [
+            {
+              "name": "firstName",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "role",
+              "type": "'employee' | 'manager' | 'admin'",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        }
+      ]
+    },
+    {
+      "name": "LeaveFormPage",
+      "file": "src/pages/leave.page.ts",
+      "description": "The request-leave form at /leave/new.",
+      "extends": "BasePage",
+      "appField": "leaveForm",
+      "locators": [
+        {
+          "name": "typeSelect",
+          "testId": "leave-type",
+          "expression": "page.getByTestId('leave-type')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "startDateInput",
+          "testId": "leave-start-date",
+          "expression": "page.getByTestId('leave-start-date')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "endDateInput",
+          "testId": "leave-end-date",
+          "expression": "page.getByTestId('leave-end-date')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "reasonInput",
+          "testId": "leave-reason",
+          "expression": "page.getByTestId('leave-reason')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "submitButton",
+          "testId": "leave-submit",
+          "expression": "page.getByTestId('leave-submit')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "remaining",
+          "testId": "leave-form-remaining",
+          "expression": "page.getByTestId('leave-form-remaining')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navDashboard",
+          "testId": "nav-dashboard",
+          "expression": "page.getByTestId('nav-dashboard')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navEmployees",
+          "testId": "nav-employees",
+          "expression": "page.getByTestId('nav-employees')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navLeave",
+          "testId": "nav-leave",
+          "expression": "page.getByTestId('nav-leave')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navExpenses",
+          "testId": "nav-expenses",
+          "expression": "page.getByTestId('nav-expenses')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navApprovals",
+          "testId": "nav-approvals",
+          "expression": "page.getByTestId('nav-approvals')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserName",
+          "testId": "nav-user-name",
+          "expression": "page.getByTestId('nav-user-name')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserRole",
+          "testId": "nav-user-role",
+          "expression": "page.getByTestId('nav-user-role')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "signOutButton",
+          "testId": "nav-sign-out",
+          "expression": "page.getByTestId('nav-sign-out')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "successMessage",
+          "testId": "flash-success",
+          "expression": "page.getByTestId('flash-success')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "errorMessage",
+          "testId": "flash-error",
+          "expression": "page.getByTestId('flash-error')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        }
+      ],
+      "methods": [
+        {
+          "name": "goto",
+          "description": "Opens the form directly.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "navigation",
+          "inheritedFrom": null
+        },
+        {
+          "name": "fieldError",
+          "description": "The validation message under a field, present only when that field failed.",
+          "params": [
+            {
+              "name": "field",
+              "type": "LeaveField",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "submitRequest",
+          "description": "Fills the form and submits it. On success the list opens with a green banner.",
+          "params": [
+            {
+              "name": "details",
+              "type": "LeaveRequestDetails",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectFieldError",
+          "description": "Asserts a field shows the given validation message.",
+          "params": [
+            {
+              "name": "field",
+              "type": "LeaveField",
+              "optional": false
+            },
+            {
+              "name": "message",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "signOut",
+          "description": "Signs the current user out. Lands on the sign-in page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSuccess",
+          "description": "Asserts the green banner shown after a successful action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectError",
+          "description": "Asserts the red banner shown after a refused action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSignedInAs",
+          "description": "Asserts the header shows the given person as signed in.",
+          "params": [
+            {
+              "name": "firstName",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "role",
+              "type": "'employee' | 'manager' | 'admin'",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        }
+      ]
+    },
+    {
+      "name": "LeavePage",
+      "file": "src/pages/leave.page.ts",
+      "description": "The signed-in employee's own leave at /leave.",
+      "extends": "BasePage",
+      "appField": "leave",
+      "locators": [
+        {
+          "name": "requestButton",
+          "testId": "leave-request",
+          "expression": "page.getByTestId('leave-request')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "remaining",
+          "testId": "leave-remaining",
+          "expression": "page.getByTestId('leave-remaining')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "allowance",
+          "testId": "leave-allowance",
+          "expression": "page.getByTestId('leave-allowance')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "table",
+          "testId": "leave-table",
+          "expression": "page.getByTestId('leave-table')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "emptyMessage",
+          "testId": "leave-empty",
+          "expression": "page.getByTestId('leave-empty')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "navDashboard",
+          "testId": "nav-dashboard",
+          "expression": "page.getByTestId('nav-dashboard')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navEmployees",
+          "testId": "nav-employees",
+          "expression": "page.getByTestId('nav-employees')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navLeave",
+          "testId": "nav-leave",
+          "expression": "page.getByTestId('nav-leave')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navExpenses",
+          "testId": "nav-expenses",
+          "expression": "page.getByTestId('nav-expenses')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "navApprovals",
+          "testId": "nav-approvals",
+          "expression": "page.getByTestId('nav-approvals')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserName",
+          "testId": "nav-user-name",
+          "expression": "page.getByTestId('nav-user-name')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "currentUserRole",
+          "testId": "nav-user-role",
+          "expression": "page.getByTestId('nav-user-role')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "signOutButton",
+          "testId": "nav-sign-out",
+          "expression": "page.getByTestId('nav-sign-out')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "successMessage",
+          "testId": "flash-success",
+          "expression": "page.getByTestId('flash-success')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "errorMessage",
+          "testId": "flash-error",
+          "expression": "page.getByTestId('flash-error')",
+          "description": "",
+          "inheritedFrom": "BasePage"
+        }
+      ],
+      "methods": [
+        {
+          "name": "goto",
+          "description": "Opens my leave.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "navigation",
+          "inheritedFrom": null
+        },
+        {
+          "name": "row",
+          "description": "The row for a leave request id, for example lr-001. The first request a test creates is lr-101.",
+          "params": [
+            {
+              "name": "requestId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "statusBadge",
+          "description": "The status badge for a leave request.",
+          "params": [
+            {
+              "name": "requestId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Locator",
+          "kind": "locator",
+          "inheritedFrom": null
+        },
+        {
+          "name": "openRequestForm",
+          "description": "Opens the request form from the list.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "cancel",
+          "description": "Cancels a pending request from the list. The button only exists while it is pending.",
+          "params": [
+            {
+              "name": "requestId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectRequestListed",
+          "description": "Asserts a request is listed with the given status.",
+          "params": [
+            {
+              "name": "requestId",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "status",
+              "type": "LeaveStatus",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectRemaining",
+          "description": "Asserts the remaining annual leave shown above the list.",
+          "params": [
+            {
+              "name": "days",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectDecision",
+          "description": "Asserts the decision column for a request shows who decided and, optionally, their comment.",
+          "params": [
+            {
+              "name": "requestId",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "signOut",
+          "description": "Signs the current user out. Lands on the sign-in page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSuccess",
+          "description": "Asserts the green banner shown after a successful action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectError",
+          "description": "Asserts the red banner shown after a refused action contains the text.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        },
+        {
+          "name": "expectSignedInAs",
+          "description": "Asserts the header shows the given person as signed in.",
+          "params": [
+            {
+              "name": "firstName",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "role",
+              "type": "'employee' | 'manager' | 'admin'",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": "BasePage"
+        }
+      ]
+    },
+    {
+      "name": "LoginPage",
+      "file": "src/pages/login.page.ts",
+      "description": "The sign-in screen at /login.",
+      "extends": null,
+      "appField": "login",
+      "locators": [
+        {
+          "name": "emailInput",
+          "testId": "login-email",
+          "expression": "page.getByTestId('login-email')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "passwordInput",
+          "testId": "login-password",
+          "expression": "page.getByTestId('login-password')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "submitButton",
+          "testId": "login-submit",
+          "expression": "page.getByTestId('login-submit')",
+          "description": "",
+          "inheritedFrom": null
+        },
+        {
+          "name": "errorMessage",
+          "testId": "login-error",
+          "expression": "page.getByTestId('login-error')",
+          "description": "",
+          "inheritedFrom": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "goto",
+          "description": "Opens the sign-in page.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "navigation",
+          "inheritedFrom": null
+        },
+        {
+          "name": "signIn",
+          "description": "Fills both fields and submits. Does not assert the outcome; callers decide what to expect.",
+          "params": [
+            {
+              "name": "email",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "password",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "action",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectSignInFormVisible",
+          "description": "Asserts the sign-in form is showing, for example after signing out.",
+          "params": [],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        },
+        {
+          "name": "expectSignInRefused",
+          "description": "Asserts sign-in was refused with the given message and the user is still on /login.",
+          "params": [
+            {
+              "name": "message",
+              "type": "string | RegExp",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "kind": "assertion",
+          "inheritedFrom": null
+        }
+      ]
+    }
+  ],
+  "fixtures": [
+    {
+      "name": "app",
+      "type": "App",
+      "description": "Every page object on one object."
+    },
+    {
+      "name": "api",
+      "type": "HrPortalApi",
+      "description": "Non-page endpoints: health and reset."
+    },
+    {
+      "name": "signInAs",
+      "type": "(user: SeedUser) => Promise<void>",
+      "description": "Signs a seed user in through the real sign-in page and waits for the dashboard."
+    },
+    {
+      "name": "resetState",
+      "type": "void",
+      "description": "Automatic. Restores the seed before every test, so tests never depend on each other."
+    }
+  ],
+  "users": [
+    {
+      "key": "admin",
+      "id": "emp-001",
+      "firstName": "Priya",
+      "lastName": "Shah",
+      "role": "admin",
+      "description": "Head of People. Can manage employees and decide on anyone's requests."
+    },
+    {
+      "key": "engineeringManager",
+      "id": "emp-002",
+      "firstName": "Tom",
+      "lastName": "Okafor",
+      "role": "manager",
+      "description": "Engineering manager. Line manager of employee, qaEngineer and platformEngineer."
+    },
+    {
+      "key": "salesManager",
+      "id": "emp-003",
+      "firstName": "Hannah",
+      "lastName": "Reid",
+      "role": "manager",
+      "description": "Sales manager. Line manager of salesExecutive and deactivated."
+    },
+    {
+      "key": "employee",
+      "id": "emp-004",
+      "firstName": "Dev",
+      "lastName": "Patel",
+      "role": "employee",
+      "description": "Dev Patel. Has a pending leave request (lr-001) and a pending expense (ex-001)."
+    },
+    {
+      "key": "qaEngineer",
+      "id": "emp-005",
+      "firstName": "Amira",
+      "lastName": "Hassan",
+      "role": "employee",
+      "description": "Amira Hassan. Has approved leave and a rejected unpaid request."
+    },
+    {
+      "key": "platformEngineer",
+      "id": "emp-006",
+      "firstName": "Jack",
+      "lastName": "Whitfield",
+      "role": "employee",
+      "description": "Jack Whitfield. No requests at all."
+    },
+    {
+      "key": "salesExecutive",
+      "id": "emp-007",
+      "firstName": "Sophie",
+      "lastName": "Clarke",
+      "role": "employee",
+      "description": "Sophie Clarke. Reports to the sales manager, not the engineering manager."
+    },
+    {
+      "key": "deactivated",
+      "id": "emp-008",
+      "firstName": "Leon",
+      "lastName": "Baptiste",
+      "role": "employee",
+      "description": "Leon Baptiste. Deactivated and cannot sign in."
+    }
+  ],
+  "seeded": [
+    {
+      "key": "pendingLeaveForEmployee",
+      "value": "'lr-001'",
+      "description": "Dev Patel's pending annual leave, 5 working days, waiting for the engineering manager."
+    },
+    {
+      "key": "pendingLeaveForSalesExecutive",
+      "value": "'lr-003'",
+      "description": "Sophie Clarke's pending annual leave, waiting for the sales manager."
+    },
+    {
+      "key": "pendingExpenseForEmployee",
+      "value": "'ex-001'",
+      "description": "Dev Patel's pending travel expense of £42.50."
+    },
+    {
+      "key": "annualLeaveAllowance",
+      "value": "25",
+      "description": "Every employee starts the year with this many days of annual leave."
+    }
+  ],
+  "helpers": [
+    {
+      "name": "isoDate",
+      "file": "src/fixtures/dates.ts",
+      "params": [
+        {
+          "name": "date",
+          "type": "Date",
+          "optional": false
+        }
+      ],
+      "returns": "string",
+      "description": "Date helpers for tests. All dates are ISO strings (YYYY-MM-DD) in UTC, matching the application. Tests use relative dates so they keep passing next month and next year."
+    },
+    {
+      "name": "addDays",
+      "file": "src/fixtures/dates.ts",
+      "params": [
+        {
+          "name": "iso",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "days",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "returns": "string",
+      "description": ""
+    },
+    {
+      "name": "today",
+      "file": "src/fixtures/dates.ts",
+      "params": [],
+      "returns": "string",
+      "description": ""
+    },
+    {
+      "name": "daysAgo",
+      "file": "src/fixtures/dates.ts",
+      "params": [
+        {
+          "name": "days",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "returns": "string",
+      "description": ""
+    },
+    {
+      "name": "mondayWeeksAhead",
+      "file": "src/fixtures/dates.ts",
+      "params": [
+        {
+          "name": "weeks",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "returns": "string",
+      "description": "The Monday of the week that starts the given number of weeks from now. Always in the future."
+    }
+  ],
+  "examples": [
+    {
+      "path": "tests/e2e/approvals/approvals.spec.ts",
+      "feature": "approvals",
+      "describe": "Manager approvals",
+      "tests": [
+        {
+          "title": "Manager approves a direct report's leave request",
+          "tags": [
+            "@TC-030"
+          ]
+        },
+        {
+          "title": "Rejecting a leave request requires a comment",
+          "tags": [
+            "@TC-031"
+          ]
+        },
+        {
+          "title": "Manager only sees requests from their own reports",
+          "tags": [
+            "@TC-032"
+          ]
+        },
+        {
+          "title": "Rejected expense shows the manager's comment to the employee",
+          "tags": [
+            "@TC-033"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/e2e/auth/login.spec.ts",
+      "feature": "auth",
+      "describe": "Sign in",
+      "tests": [
+        {
+          "title": "Employee can sign in and sees their dashboard",
+          "tags": [
+            "@TC-001"
+          ]
+        },
+        {
+          "title": "Wrong password is refused with a message",
+          "tags": [
+            "@TC-002"
+          ]
+        },
+        {
+          "title": "Deactivated account cannot sign in",
+          "tags": [
+            "@TC-003"
+          ]
+        },
+        {
+          "title": "Signing out returns to the sign-in page",
+          "tags": [
+            "@TC-004"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/e2e/employees/manage-employees.spec.ts",
+      "feature": "employees",
+      "describe": "Employee directory",
+      "tests": [
+        {
+          "title": "Admin can add an employee",
+          "tags": [
+            "@TC-040"
+          ]
+        },
+        {
+          "title": "Duplicate email is rejected",
+          "tags": [
+            "@TC-041"
+          ]
+        },
+        {
+          "title": "Admin can deactivate an employee",
+          "tags": [
+            "@TC-042"
+          ]
+        },
+        {
+          "title": "Employee cannot open the add-employee form",
+          "tags": [
+            "@TC-043"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/e2e/expenses/submit-expense.spec.ts",
+      "feature": "expenses",
+      "describe": "Expense claims",
+      "tests": [
+        {
+          "title": "Employee can submit an expense claim",
+          "tags": [
+            "@TC-020"
+          ]
+        },
+        {
+          "title": "Claim over the £5,000 cap is rejected",
+          "tags": [
+            "@TC-021"
+          ]
+        },
+        {
+          "title": "Claim dated in the future is rejected",
+          "tags": [
+            "@TC-022"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/e2e/leave/request-leave.spec.ts",
+      "feature": "leave",
+      "describe": "Leave requests",
+      "tests": [
+        {
+          "title": "Employee can submit an annual leave request",
+          "tags": [
+            "@TC-010"
+          ]
+        },
+        {
+          "title": "Annual leave beyond the remaining balance is rejected",
+          "tags": [
+            "@TC-011"
+          ]
+        },
+        {
+          "title": "Weekend-only dates are rejected",
+          "tags": [
+            "@TC-012"
+          ]
+        },
+        {
+          "title": "Employee can cancel a pending request and the days return to the balance",
+          "tags": [
+            "@TC-013"
+          ]
+        }
+      ]
+    }
+  ]
+}

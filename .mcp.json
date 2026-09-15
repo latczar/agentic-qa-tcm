@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "framework-context": {
+      "command": "node",
+      "args": ["--import", "tsx", "packages/mcp-server/src/stdio.ts"]
+    }
+  }
+}
