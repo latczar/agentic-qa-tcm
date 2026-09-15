@@ -1,0 +1,5 @@
+{
+  "description": "Ignores the framework: imports @playwright/test, drives page directly, hard-codes URLs (G1).",
+  "testCaseId": "TC-014",
+  "expect": { "finalStatus": "PENDING_REVIEW", "attempts": 2, "failureClasses": ["POLICY_VIOLATION"], "tcmStatus": "PENDING_REVIEW" }
+}

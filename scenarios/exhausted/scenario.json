@@ -1,0 +1,5 @@
+{
+  "description": "Keeps inventing the same method for three attempts; the run stops and keeps the best attempt for a human.",
+  "testCaseId": "TC-014",
+  "expect": { "finalStatus": "NEEDS_ATTENTION", "attempts": 3, "failureClasses": ["UNKNOWN_SYMBOL","UNKNOWN_SYMBOL","UNKNOWN_SYMBOL"], "tcmStatus": "NEEDS_ATTENTION" }
+}

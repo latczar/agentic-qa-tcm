@@ -1,0 +1,5 @@
+{
+  "description": "Structurally perfect but asserts the wrong balance; fails in the browser both times (G5).",
+  "testCaseId": "TC-014",
+  "expect": { "finalStatus": "PENDING_REVIEW", "attempts": 2, "failureClasses": ["EXECUTION_FAILURE"], "tcmStatus": "PENDING_REVIEW" }
+}

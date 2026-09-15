@@ -47,8 +47,8 @@ jobs:
           path: packages/e2e-framework/playwright-report
           retention-days: 7
 
-  mock-tcm-integration:
-    name: mock TCM repository against Postgres
+  integration:
+    name: integration against Postgres (mock TCM repository, pipeline scenario matrix)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -71,4 +71,14 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - run: npm run test:integration
+        env:
+          # One database for both apps in CI; the table names do not clash.
+          DATABASE_URL: postgres://aiqa:aiqa@localhost:5432/tcm
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pipeline-artifacts
+          path: artifacts/integration-runs
+          retention-days: 7

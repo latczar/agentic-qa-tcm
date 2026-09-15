@@ -23,7 +23,8 @@
     "manifest:build": "npm run build -w packages/framework-manifest",
     "manifest:check": "npm run check -w packages/framework-manifest",
     "mcp": "node --import tsx packages/mcp-server/src/stdio.ts",
-    "mcp:probe": "node --import tsx packages/mcp-server/src/probe.ts"
+    "mcp:probe": "node --import tsx packages/mcp-server/src/probe.ts",
+    "pipeline": "npm run pipeline -w packages/orchestrator --"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,0 +1,30 @@
+{
+  "name": "@aiqa/orchestrator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The pipeline: claims a test case, builds context through MCP, asks a provider for a structured test, runs the gates, retries with feedback, persists everything and reports to the TCM",
+  "scripts": {
+    "pipeline": "tsx src/cli.ts",
+    "dev": "tsx watch src/api/server.ts",
+    "start": "tsx src/api/server.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@aiqa/framework-manifest": "^0.1.0",
+    "@aiqa/mcp-server": "^0.1.0",
+    "@aiqa/shared": "^0.1.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "express": "^5.2.1",
+    "pg": "^8.23.0",
+    "prettier": "^3.9.6",
+    "ts-morph": "^28.0.0",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.13"
+  }
+}

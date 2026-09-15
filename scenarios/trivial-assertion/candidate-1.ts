@@ -1,0 +1,15 @@
+import { addDays, expect, mondayWeeksAhead, test, users } from '../../src/fixtures/test.js';
+
+test.describe('Leave requests', () => {
+  test('Sick leave can be recorded for a day in the past', { tag: '@TC-014' }, async ({ app, signInAs }) => {
+    await signInAs(users.qaEngineer);
+    const lastMonday = addDays(mondayWeeksAhead(1), -14);
+
+    await app.leave.goto();
+    expect(true).toBe(true);
+    await app.leave.openRequestForm();
+    await app.leaveForm.submitRequest({ type: 'sick', startDate: lastMonday, endDate: lastMonday, reason: 'Flu' });
+
+    expect(true).toBe(true);
+  });
+});

@@ -1,0 +1,5 @@
+{
+  "description": "Passes a number where a string is required (G3 tsc), corrected on attempt 2.",
+  "testCaseId": "TC-014",
+  "expect": { "finalStatus": "PENDING_REVIEW", "attempts": 2, "failureClasses": ["TYPE_ERROR"], "tcmStatus": "PENDING_REVIEW" }
+}

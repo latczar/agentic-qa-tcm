@@ -1,0 +1,1 @@
+{"testCaseId": "TC-014", "fileName": "tc-014-sick-leave.spec.ts", "title": "Sick leave can be recorded for a day in the past", "code": "import { test } from
