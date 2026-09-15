@@ -1,0 +1,46 @@
+<%- include('../partials/head') %>
+<p><a href="/cases/<%= testCase.id %>">Back to <%= testCase.id %></a></p>
+<section class="card narrow">
+  <h1>Edit <%= testCase.id %></h1>
+  <p class="muted">Saving bumps the version from <%= testCase.version %> to <%= testCase.version + 1 %>. The automation status is not changed.</p>
+  <form method="post" action="/cases/<%= testCase.id %>" data-testid="tcm-edit-form" novalidate>
+    <div class="field">
+      <label for="title">Title</label>
+      <input id="title" name="title" type="text" value="<%= values.title %>" data-testid="tcm-edit-title" />
+      <% if (errors.title) { %><p class="field-error" data-testid="error-title"><%= errors.title %></p><% } %>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="feature">Feature</label>
+        <select id="feature" name="feature" data-testid="tcm-edit-feature">
+          <% for (const f of features) { %><option value="<%= f %>" <%= values.feature === f ? 'selected' : '' %>><%= f %></option><% } %>
+        </select>
+      </div>
+      <div class="field">
+        <label for="priority">Priority</label>
+        <select id="priority" name="priority" data-testid="tcm-edit-priority">
+          <% for (const p of priorities) { %><option value="<%= p %>" <%= values.priority === p ? 'selected' : '' %>><%= p %></option><% } %>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="preconditions">Preconditions</label>
+      <textarea id="preconditions" name="preconditions" rows="3" data-testid="tcm-edit-preconditions"><%= values.preconditions %></textarea>
+    </div>
+    <div class="field">
+      <label for="steps">Steps, one per line as <code>action =&gt; expected result</code></label>
+      <textarea id="steps" name="steps" rows="8" data-testid="tcm-edit-steps"><%= values.steps %></textarea>
+      <% if (errors.steps) { %><p class="field-error" data-testid="error-steps"><%= errors.steps %></p><% } %>
+    </div>
+    <div class="field">
+      <label for="test_data">Test data (JSON object)</label>
+      <textarea id="test_data" name="test_data" rows="4" data-testid="tcm-edit-test-data"><%= values.test_data %></textarea>
+      <% if (errors.test_data) { %><p class="field-error" data-testid="error-test_data"><%= errors.test_data %></p><% } %>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" data-testid="tcm-edit-save">Save</button>
+      <a class="btn btn-link" href="/cases/<%= testCase.id %>">Cancel</a>
+    </div>
+  </form>
+</section>
+<%- include('../partials/foot') %>

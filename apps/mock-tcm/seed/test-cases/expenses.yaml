@@ -1,0 +1,72 @@
+# Expense claims. Business rules under test: amounts in pounds stored as pence, £5,000 cap per
+# claim, no future dates, description required.
+
+- id: TC-020
+  title: Employee can submit an expense claim
+  feature: expenses
+  priority: high
+  preconditions: |
+    Signed in as Dev Patel.
+  steps:
+    - action: Open My expenses and press Submit an expense.
+      expected: The claim form is shown.
+    - action: Choose Travel, amount 18.20, description "Taxi from the station", a date three days ago. Submit.
+      expected: A green banner says "Expense of £18.20 submitted for approval."
+    - action: Look at the list.
+      expected: A new row ex-101 shows £18.20 with status Pending.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/expenses/submit-expense.spec.ts
+
+- id: TC-021
+  title: Claim over the £5,000 cap is rejected
+  feature: expenses
+  priority: high
+  preconditions: |
+    Signed in as any active employee.
+  steps:
+    - action: Open the claim form. Choose Equipment, amount 5000.01, description "Workstation", yesterday's date. Submit.
+      expected: A message under Amount says the amount cannot exceed £5,000.00 per claim.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/expenses/submit-expense.spec.ts
+
+- id: TC-022
+  title: Claim dated in the future is rejected
+  feature: expenses
+  priority: medium
+  preconditions: |
+    Signed in as any active employee.
+  steps:
+    - action: Open the claim form. Choose Meals, amount 12.00, description "Lunch next week", a date seven days ahead. Submit.
+      expected: A message under Date incurred says the date cannot be in the future.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/expenses/submit-expense.spec.ts
+
+- id: TC-023
+  title: Unreadable amount shows a helpful message
+  feature: expenses
+  priority: medium
+  preconditions: |
+    Signed in as any active employee.
+  steps:
+    - action: Open the claim form. Enter "twelve pounds" as the amount, any valid category, description and past date. Submit.
+      expected: A message under Amount says to enter an amount in pounds, for example 12.50.
+    - action: Correct the amount to 12.50 and submit again.
+      expected: The claim is accepted and listed as £12.50 Pending.
+  automation_status: NOT_PLANNED
+
+- id: TC-024
+  title: Pending total on My expenses reflects a new claim
+  feature: expenses
+  priority: low
+  preconditions: |
+    Signed in as Dev Patel, whose seeded pending claim ex-001 is £42.50.
+  steps:
+    - action: Open My expenses.
+      expected: The "Awaiting approval" total reads £42.50.
+    - action: Submit a new Meals claim for 7.50 dated yesterday.
+      expected: The list shows ex-101 at £7.50 Pending.
+    - action: Read the "Awaiting approval" total again.
+      expected: It now reads £50.00.
+  test_data:
+    email: dev.patel@harbourhr.example
+  automation_status: NOT_PLANNED

@@ -1,0 +1,73 @@
+<%- include('../partials/head') %>
+<% if (flash) { %>
+<div class="flash flash-<%= flashKind %>" role="status" data-testid="tcm-flash-<%= flashKind %>"><%= flash %></div>
+<% } %>
+<p><a href="/cases">All cases</a></p>
+<div class="page-header">
+  <h1><span class="muted"><%= testCase.id %></span> <%= testCase.title %></h1>
+  <a class="btn" href="/cases/<%= testCase.id %>/edit" data-testid="tcm-edit">Edit</a>
+</div>
+
+<div class="columns">
+  <section class="card">
+    <dl class="details">
+      <dt>Feature</dt><dd><%= testCase.feature %></dd>
+      <dt>Priority</dt><dd><%= testCase.priority %></dd>
+      <dt>Version</dt><dd data-testid="tcm-version"><%= testCase.version %></dd>
+      <dt>Preconditions</dt><dd class="pre"><%= testCase.preconditions || 'None' %></dd>
+    </dl>
+    <h2>Steps</h2>
+    <table class="table" data-testid="tcm-steps">
+      <thead><tr><th>#</th><th>Action</th><th>Expected result</th></tr></thead>
+      <tbody>
+        <% testCase.steps.forEach((s, i) => { %>
+        <tr><td><%= i + 1 %></td><td><%= s.action %></td><td><%= s.expected %></td></tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% if (Object.keys(testCase.test_data).length) { %>
+    <h2>Test data</h2>
+    <pre data-testid="tcm-test-data"><%= JSON.stringify(testCase.test_data, null, 2) %></pre>
+    <% } %>
+  </section>
+
+  <aside>
+    <section class="card">
+      <h2>Automation</h2>
+      <p><span class="badge badge-<%= testCase.automation_status %>" data-testid="tcm-status"><%= statusLabel(testCase.automation_status) %></span></p>
+      <dl class="details">
+        <dt>Reference</dt><dd class="small" data-testid="tcm-automation-ref"><%= testCase.automation_ref ?? 'None' %></dd>
+        <dt>Run id</dt><dd class="small" data-testid="tcm-run-id"><%= testCase.automation_run_id ?? 'None' %></dd>
+        <dt>Note</dt><dd class="small" data-testid="tcm-note"><%= testCase.automation_note ?? 'None' %></dd>
+      </dl>
+      <% if (actions.length) { %>
+      <div class="actions">
+        <% for (const to of actions) { %>
+        <form method="post" action="/cases/<%= testCase.id %>/status">
+          <input type="hidden" name="to" value="<%= to %>" />
+          <button type="submit" class="btn <%= to === 'READY_FOR_AUTOMATION' ? 'btn-primary' : '' %>" data-testid="tcm-set-<%= to %>">
+            <%= to === 'READY_FOR_AUTOMATION' ? 'Request automation' : 'Mark ' + statusLabel(to).toLowerCase() %>
+          </button>
+        </form>
+        <% } %>
+      </div>
+      <% } else { %>
+      <p class="muted small">The pipeline owns this case until it reports back.</p>
+      <% } %>
+    </section>
+
+    <section class="card">
+      <h2>History</h2>
+      <ul class="history" data-testid="tcm-history">
+        <% for (const h of history) { %>
+        <li>
+          <span class="muted small"><%= new Date(h.at).toLocaleString('en-GB', { timeZone: 'Europe/London' }) %></span><br />
+          <strong><%= h.actor %></strong>: <%= h.from_status ? statusLabel(h.from_status) + ' → ' : '' %><%= statusLabel(h.to_status) %> (v<%= h.version %>)
+          <% if (h.note) { %><br /><span class="small"><%= h.note %></span><% } %>
+        </li>
+        <% } %>
+      </ul>
+    </section>
+  </aside>
+</div>
+<%- include('../partials/foot') %>

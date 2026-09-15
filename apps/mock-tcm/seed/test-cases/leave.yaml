@@ -1,0 +1,111 @@
+# Leave requests. Business rules under test: working days exclude weekends, annual leave is
+# limited by the remaining balance (approved and pending both count), only sick leave may be
+# in the past, only pending requests can be cancelled.
+
+- id: TC-010
+  title: Employee can submit an annual leave request
+  feature: leave
+  priority: high
+  preconditions: |
+    Signed in as Dev Patel, who has 20 days of annual leave remaining (25 allowance, 5 pending).
+  steps:
+    - action: Open My leave.
+      expected: The balance reads 20 days remaining.
+    - action: Press Request leave. Choose Annual, a Monday four weeks from today as the first day and the Wednesday of that week as the last day. Enter a reason and submit.
+      expected: A green banner says "Leave request submitted for approval (3 working days)".
+    - action: Look at the list.
+      expected: A new row lr-101 shows the dates with status Pending.
+    - action: Look at the balance.
+      expected: It now reads 17 days remaining, because pending requests count as used.
+  test_data:
+    email: dev.patel@harbourhr.example
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/leave/request-leave.spec.ts
+
+- id: TC-011
+  title: Annual leave beyond the remaining balance is rejected
+  feature: leave
+  priority: high
+  preconditions: |
+    Signed in as Dev Patel with 20 days remaining.
+  steps:
+    - action: Open Request leave. Choose Annual and a range covering five full working weeks in the future. Submit.
+      expected: The form is shown again with a message under Last day saying the request needs 25 working days but you have 20 remaining.
+    - action: Open My leave.
+      expected: No new request was created and the balance is still 20.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/leave/request-leave.spec.ts
+
+- id: TC-012
+  title: Weekend-only dates are rejected
+  feature: leave
+  priority: medium
+  preconditions: |
+    Signed in as any active employee.
+  steps:
+    - action: Open Request leave. Choose Annual, a future Saturday as first day and the following Sunday as last day. Submit.
+      expected: A message under First day says the selected dates contain no working days.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/leave/request-leave.spec.ts
+
+- id: TC-013
+  title: Employee can cancel a pending request and the days return to the balance
+  feature: leave
+  priority: high
+  preconditions: |
+    Signed in as Dev Patel. Seeded request lr-001 (5 days annual) is Pending.
+  steps:
+    - action: Open My leave.
+      expected: Row lr-001 shows status Pending with a Cancel button.
+    - action: Press Cancel on lr-001.
+      expected: A green banner says "Leave request cancelled." and the row now shows Cancelled.
+    - action: Look at the balance.
+      expected: It reads 25 days remaining.
+  test_data:
+    request: lr-001
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/leave/request-leave.spec.ts
+
+- id: TC-014
+  title: Sick leave can be recorded for a day in the past
+  feature: leave
+  priority: high
+  preconditions: |
+    Signed in as Amira Hassan (amira.hassan@harbourhr.example), who has 20 days of annual leave remaining.
+  steps:
+    - action: Open Request leave. Choose Sick, and enter last Monday as both the first and last day. Reason "Flu". Submit.
+      expected: A green banner says "Leave request submitted for approval (1 working day)".
+    - action: Look at the list.
+      expected: A new row lr-101 of type Sick shows status Pending.
+    - action: Look at the balance.
+      expected: It still reads 20 days remaining, because sick leave does not use the annual allowance.
+  test_data:
+    email: amira.hassan@harbourhr.example
+    password: Password123!
+  automation_status: READY_FOR_AUTOMATION
+
+- id: TC-015
+  title: Annual leave cannot start in the past
+  feature: leave
+  priority: medium
+  preconditions: |
+    Signed in as any active employee.
+  steps:
+    - action: Open Request leave. Choose Annual and enter yesterday as both first and last day. Submit.
+      expected: A message under First day says the start date cannot be in the past and only sick leave can be recorded retrospectively.
+  automation_status: NOT_PLANNED
+
+- id: TC-016
+  title: An approved request cannot be cancelled
+  feature: leave
+  priority: low
+  preconditions: |
+    Signed in as Amira Hassan. Seeded request lr-002 is Approved.
+  steps:
+    - action: Open My leave and find row lr-002.
+      expected: The status is Approved and the decision column names Tom Okafor.
+    - action: Look for a Cancel button on that row.
+      expected: There is none. Only pending requests offer Cancel.
+  test_data:
+    request: lr-002
+  automation_status: NOT_PLANNED

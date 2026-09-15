@@ -1,0 +1,93 @@
+# Employee directory. Business rules under test: only admins manage employees, emails are
+# unique, deactivated employees cannot sign in, admins cannot deactivate themselves.
+
+- id: TC-040
+  title: Admin can add an employee
+  feature: employees
+  priority: high
+  preconditions: |
+    Signed in as Priya Shah, admin.
+  steps:
+    - action: Open Employees and press Add employee.
+      expected: The employee form is shown.
+    - action: Enter first name Nadia, last name Kowalski, email nadia.kowalski@harbourhr.example, job title Finance Analyst, department Finance, role Employee, manager Priya Shah, a start date two weeks ago, allowance 25, password Welcome-2026!. Save.
+      expected: A green banner says "Nadia Kowalski has been added." and her detail page shows manager Priya Shah.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/employees/manage-employees.spec.ts
+
+- id: TC-041
+  title: Duplicate email is rejected
+  feature: employees
+  priority: high
+  preconditions: |
+    Signed in as Priya Shah. Dev Patel exists with dev.patel@harbourhr.example.
+  steps:
+    - action: Open Add employee and fill the form using dev.patel@harbourhr.example as the email. Save.
+      expected: The form is shown again with a message under Email saying an employee with this email address already exists.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/employees/manage-employees.spec.ts
+
+- id: TC-042
+  title: Admin can deactivate an employee
+  feature: employees
+  priority: high
+  preconditions: |
+    Signed in as Priya Shah. Jack Whitfield (emp-006) is active.
+  steps:
+    - action: Open Employees and press Deactivate on Jack Whitfield's row.
+      expected: A green banner says "Jack Whitfield has been deactivated." and his status badge reads Inactive.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/employees/manage-employees.spec.ts
+
+- id: TC-043
+  title: Employee cannot open the add-employee form
+  feature: employees
+  priority: medium
+  preconditions: |
+    Signed in as Dev Patel (employee role).
+  steps:
+    - action: Open /employees/new directly.
+      expected: An error page with status 403 is shown.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/employees/manage-employees.spec.ts
+
+- id: TC-044
+  title: Directory search filters by department
+  feature: employees
+  priority: medium
+  preconditions: |
+    Signed in as any active employee. The seed has three people in Sales: Hannah Reid, Sophie Clarke and Leon Baptiste.
+  steps:
+    - action: Open Employees and search for "sales".
+      expected: The count reads "3 employees" and only Hannah Reid, Sophie Clarke and Leon Baptiste are listed.
+    - action: Press Clear.
+      expected: All eight employees are listed again.
+  automation_status: NOT_PLANNED
+
+- id: TC-045
+  title: A reactivated employee can sign in again
+  feature: employees
+  priority: high
+  preconditions: |
+    Leon Baptiste (emp-008) is deactivated in the seed. Priya Shah is admin.
+  steps:
+    - action: Signed in as Priya, open Employees and press Reactivate on Leon Baptiste's row.
+      expected: A green banner says "Leon Baptiste has been reactivated." and his status badge reads Active.
+    - action: Sign out. Sign in as leon.baptiste@harbourhr.example with Password123!.
+      expected: The dashboard opens with the heading "Hello, Leon".
+  test_data:
+    admin: priya.shah@harbourhr.example
+    employee: leon.baptiste@harbourhr.example
+    password: Password123!
+  automation_status: READY_FOR_AUTOMATION
+
+- id: TC-046
+  title: Admin cannot deactivate their own account
+  feature: employees
+  priority: medium
+  preconditions: |
+    Signed in as Priya Shah (emp-001), admin.
+  steps:
+    - action: Open Employees and press Deactivate on Priya Shah's own row.
+      expected: A red banner says "You cannot deactivate your own account." and her status badge still reads Active.
+  automation_status: NOT_PLANNED

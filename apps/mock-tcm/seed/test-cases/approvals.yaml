@@ -1,0 +1,104 @@
+# Manager approvals. Business rules under test: managers decide for direct reports, admins for
+# everyone, nobody for themselves; rejecting requires a comment; decided items leave the queue.
+
+- id: TC-030
+  title: Manager approves a direct report's leave request
+  feature: approvals
+  priority: high
+  preconditions: |
+    Signed in as Tom Okafor (tom.okafor@harbourhr.example), engineering manager. Dev Patel's request lr-001 is Pending.
+  steps:
+    - action: Open Approvals.
+      expected: The leave section lists lr-001 for Dev Patel.
+    - action: Press Approve on lr-001.
+      expected: A green banner says "Leave request for Dev Patel approved." and lr-001 is no longer in the queue.
+  test_data:
+    email: tom.okafor@harbourhr.example
+    request: lr-001
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/approvals/approvals.spec.ts
+
+- id: TC-031
+  title: Rejecting a leave request requires a comment
+  feature: approvals
+  priority: high
+  preconditions: |
+    Signed in as Tom Okafor. lr-001 is Pending.
+  steps:
+    - action: Open Approvals and press Reject on lr-001 with the comment box empty.
+      expected: A red banner says "Add a comment explaining the rejection." and lr-001 is still in the queue.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/approvals/approvals.spec.ts
+
+- id: TC-032
+  title: Manager only sees requests from their own reports
+  feature: approvals
+  priority: high
+  preconditions: |
+    Signed in as Tom Okafor. Sophie Clarke (Sales) has pending request lr-003.
+  steps:
+    - action: Open Approvals.
+      expected: lr-001 (Dev Patel, Engineering) is listed. lr-003 (Sophie Clarke, Sales) is not.
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/approvals/approvals.spec.ts
+
+- id: TC-033
+  title: Rejected expense shows the manager's comment to the employee
+  feature: approvals
+  priority: medium
+  preconditions: |
+    Tom Okafor manages Dev Patel. Dev's expense ex-001 (£42.50) is Pending.
+  steps:
+    - action: Signed in as Tom, open Approvals and reject ex-001 with the comment "Please attach the receipt."
+      expected: A green banner confirms the rejection.
+    - action: Sign out, sign in as Dev Patel and open My expenses.
+      expected: "ex-001 shows £42.50 with status Rejected and the decision column reads \"Tom Okafor: Please attach the receipt.\""
+  automation_status: AUTOMATED
+  automation_ref: packages/e2e-framework/tests/e2e/approvals/approvals.spec.ts
+
+- id: TC-034
+  title: Admin can approve a request from any department
+  feature: approvals
+  priority: high
+  preconditions: |
+    Signed in as Priya Shah (priya.shah@harbourhr.example), admin. Sophie Clarke's request lr-003 is Pending and Sophie reports to Hannah Reid, not to Priya.
+  steps:
+    - action: Open Approvals.
+      expected: Both lr-001 (Dev Patel) and lr-003 (Sophie Clarke) are listed, because admins see everyone.
+    - action: Press Approve on lr-003.
+      expected: A green banner says "Leave request for Sophie Clarke approved." and lr-003 leaves the queue.
+    - action: Check the leave count in the section heading.
+      expected: It has gone down by one.
+  test_data:
+    email: priya.shah@harbourhr.example
+    password: Password123!
+    request: lr-003
+  automation_status: READY_FOR_AUTOMATION
+
+- id: TC-035
+  title: Employee cannot open the approvals page
+  feature: approvals
+  priority: medium
+  preconditions: |
+    Signed in as Dev Patel (employee role).
+  steps:
+    - action: Look at the navigation.
+      expected: There is no Approvals link.
+    - action: Open /approvals directly.
+      expected: An error page with status 403 is shown.
+  automation_status: NOT_PLANNED
+
+- id: TC-036
+  title: Approving leave updates the employee's dashboard figures
+  feature: approvals
+  priority: low
+  preconditions: |
+    Dev Patel's lr-001 (5 days) is Pending. Tom Okafor is his manager.
+  steps:
+    - action: Signed in as Dev, open the dashboard.
+      expected: Remaining leave reads 20 and "leave requests awaiting approval" reads 1.
+    - action: Sign out, sign in as Tom, approve lr-001, sign out.
+      expected: The approval is confirmed.
+    - action: Sign in as Dev and open the dashboard.
+      expected: Remaining leave still reads 20 (approved days stay used) and "awaiting approval" now reads 0.
+  automation_status: NOT_PLANNED
