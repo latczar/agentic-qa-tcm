@@ -17,13 +17,15 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "compose:config": "docker compose config -q",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "npm test -w packages/e2e-framework"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.5.1",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-playwright": "^2.12.0",
     "prettier": "^3.9.6",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0",

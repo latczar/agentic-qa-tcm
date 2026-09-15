@@ -55,3 +55,32 @@ After a reset, the first leave request created is always `lr-101`. That lets a g
 
 **How does the reset endpoint stay out of production?**
 It is only mounted when test mode is on, and test mode defaults to off when `NODE_ENV=production`. The health endpoint reports which mode is active so a test can refuse to run against the wrong environment.
+
+## Phase 2: Playwright framework
+
+**Why build page objects when Playwright's locators are already readable?**
+Because the framework, not each test, should be the one place that knows how the application is built. When a test id changes, one line changes. It also gives the AI a vocabulary: the model composes calls to `app.leave.submitRequest()` rather than inventing selectors, and the manifest in phase 4 is extracted from exactly these classes.
+
+**Why is `workers: 1`?**
+The application holds shared in-memory state and every test resets it. Two workers would reset each other mid-test. One app instance per worker would fix that, but it is complexity the project does not need at this size, and the whole suite runs in about fifteen seconds.
+
+**Why `retries: 0`?**
+A flaky test is a finding. Retrying hides it. The pipeline later runs generated tests twice on purpose to catch flakiness, and the handwritten suite holds itself to the same standard.
+
+**Why does the framework start the application itself?**
+Playwright's `webServer` option starts the HR Portal, waits for its health endpoint, and reuses a server you already have running. One command works the same on a laptop and in CI, and there is no separate "start the app first" step to forget.
+
+**Why are the conventions lint rules rather than a document?**
+A document is advice. A lint rule is a gate. The same five rules run over human specs today and over generated specs in phase 5, so "does the generated test follow the framework" becomes a deterministic yes or no with a precise message the model can act on.
+
+**How does `require-state-assertion` know a page object method asserts something?**
+By naming convention: assertion helpers are named `expect*` and contain the real `expect` call. The rule counts either a web-first matcher such as `toHaveText` or a call to an `expect*` method. A test with neither passes whatever the application does, which is the "useless assertion" failure scenario from the brief.
+
+**Why relative dates in tests?**
+The application refuses annual leave in the past. A test that hard-codes October 2026 breaks in November 2026. `mondayWeeksAhead(4)` keeps the test valid indefinitely and always lands on a working week.
+
+**Why two Playwright projects?**
+`e2e` is the handwritten suite that CI runs. `candidates` points at `tests/generated`, where AI output waits for review. Separating them means a bad generated test can never fail the main build or sneak into it unreviewed.
+
+**What did the negative check show?**
+A deliberately bad spec, raw locators, an absolute URL, `waitForTimeout`, `expect(true)`, a `toBeTruthy` on the title, and no tag, produced one lint error per violation with a message saying what to do instead. Those messages are what the pipeline will feed back to the model on retry.

@@ -1,0 +1,17 @@
+{
+  "name": "@aiqa/e2e-framework",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright framework for Harbour HR: page objects, fixtures, conventions, exemplar tests and lint rules",
+  "scripts": {
+    "test": "playwright test --project e2e",
+    "test:headed": "playwright test --project e2e --headed",
+    "test:candidates": "playwright test --project candidates",
+    "report": "playwright show-report",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}
