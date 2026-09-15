@@ -1,0 +1,51 @@
+# Phase 0 stack: a database and a scheduler. Services are added phase by phase, never ahead of need.
+# Validate with: docker compose config -q
+name: ai-qa-pipeline
+
+services:
+  # One Postgres instance, several databases. The init script creates `tcm` (mock TCM) and
+  # `pipeline` (orchestrator) on the FIRST start only, when the data volume is empty.
+  # Port 5432 is published so the orchestrator can run on the host during development.
+  postgres:
+    image: postgres:16-alpine
+    container_name: aiqa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-aiqa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aiqa}
+      POSTGRES_DB: ${POSTGRES_DB:-aiqa}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-aiqa} -d ${POSTGRES_DB:-aiqa}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # n8n keeps its own state (workflows, credentials, encryption key) in SQLite inside its volume.
+  # It is deliberately independent of Postgres: n8n is scheduling glue, the orchestrator owns run state.
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: aiqa-n8n
+    restart: unless-stopped
+    ports:
+      - '${N8N_PORT:-5678}:5678'
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      N8N_WEBHOOK_URL: http://localhost:${N8N_PORT:-5678}/
+      N8N_SECURE_COOKIE: 'false'
+      N8N_DIAGNOSTICS_ENABLED: 'false'
+      N8N_PERSONALIZATION_ENABLED: 'false'
+      GENERIC_TIMEZONE: Europe/London
+      TZ: Europe/London
+    volumes:
+      - n8n-data:/home/node/.n8n
+
+volumes:
+  postgres-data:
+  n8n-data:
