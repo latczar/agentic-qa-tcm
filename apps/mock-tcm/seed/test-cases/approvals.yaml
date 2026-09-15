@@ -52,7 +52,7 @@
     - action: Signed in as Tom, open Approvals and reject ex-001 with the comment "Please attach the receipt."
       expected: A green banner confirms the rejection.
     - action: Sign out, sign in as Dev Patel and open My expenses.
-      expected: "ex-001 shows £42.50 with status Rejected and the decision column reads \"Tom Okafor: Please attach the receipt.\""
+      expected: 'ex-001 shows £42.50 with status Rejected and the decision column reads "Tom Okafor: Please attach the receipt."'
   automation_status: AUTOMATED
   automation_ref: packages/e2e-framework/tests/e2e/approvals/approvals.spec.ts
 
