@@ -1,0 +1,14 @@
+{
+  "testCaseId": "TC-014",
+  "fileName": "tc-014-sick-leave-past-date.spec.ts",
+  "title": "Sick leave can be recorded for a day in the past",
+  "usedPageObjects": [],
+  "usedMethods": [],
+  "usedFixtures": [
+    "app",
+    "signInAs"
+  ],
+  "code": "import { test, expect } from '@playwright/test';\n\ntest.describe('Leave requests', () => {\n  test('Sick leave can be recorded for a day in the past', { tag: '@TC-014' }, async ({ page }) => {\n    await page.goto('http://localhost:3000/login');\n    await page.getByTestId('login-email').fill('amira.hassan@harbourhr.example');\n    await page.getByTestId('login-password').fill('Password123!');\n    await page.getByTestId('login-submit').click();\n    await page.goto('http://localhost:3000/leave');\n    await expect(page.getByTestId('leave-remaining')).toHaveText('20');\n  });\n});\n",
+  "assumptions": [],
+  "confidence": 0.8
+}

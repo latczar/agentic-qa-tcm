@@ -1,0 +1,5 @@
+{
+  "description": "Tags the test with another case id (G1 traceability).",
+  "testCaseId": "TC-014",
+  "expect": { "finalStatus": "PENDING_REVIEW", "attempts": 2, "failureClasses": ["POLICY_VIOLATION"], "tcmStatus": "PENDING_REVIEW" }
+}

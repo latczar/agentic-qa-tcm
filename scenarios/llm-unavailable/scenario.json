@@ -1,0 +1,12 @@
+{
+  "description": "The model server is down. The run is deferred without spending an attempt; the case stays claimed.",
+  "testCaseId": "TC-014",
+  "provider": "failing",
+  "expect": {
+    "finalStatus": "DEFERRED",
+    "attempts": 0,
+    "failureClasses": [],
+    "tcmStatus": "AUTOMATION_IN_PROGRESS",
+    "runFailureClass": "LLM_UNAVAILABLE"
+  }
+}

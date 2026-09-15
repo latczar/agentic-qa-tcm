@@ -1,0 +1,5 @@
+{
+  "description": "Truncated JSON on attempt 1 (G0), repaired on attempt 2.",
+  "testCaseId": "TC-014",
+  "expect": { "finalStatus": "PENDING_REVIEW", "attempts": 2, "failureClasses": ["MALFORMED_RESPONSE"], "tcmStatus": "PENDING_REVIEW" }
+}

@@ -1,0 +1,5 @@
+{
+  "description": "Calls an invented method submitLeave (G2), corrected after did-you-mean feedback.",
+  "testCaseId": "TC-014",
+  "expect": { "finalStatus": "PENDING_REVIEW", "attempts": 2, "failureClasses": ["UNKNOWN_SYMBOL"], "tcmStatus": "PENDING_REVIEW" }
+}

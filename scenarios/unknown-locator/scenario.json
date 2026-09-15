@@ -1,0 +1,5 @@
+{
+  "description": "Asserts on a locator that does not exist, balanceBadge (G2), then uses the real helper.",
+  "testCaseId": "TC-014",
+  "expect": { "finalStatus": "PENDING_REVIEW", "attempts": 2, "failureClasses": ["UNKNOWN_SYMBOL"], "tcmStatus": "PENDING_REVIEW" }
+}

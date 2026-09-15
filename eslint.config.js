@@ -14,6 +14,7 @@ export default defineConfig([
     '**/playwright-report/**',
     '**/test-results/**',
     'artifacts/**',
+    'scenarios/**',
   ]),
   js.configs.recommended,
   tseslint.configs.recommended,

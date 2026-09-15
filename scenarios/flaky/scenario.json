@@ -1,0 +1,5 @@
+{
+  "description": "Passes on the first run and fails on the repeat (G5). Flaky is a finding, never retried.",
+  "testCaseId": "TC-014",
+  "expect": { "finalStatus": "NEEDS_ATTENTION", "attempts": 1, "failureClasses": ["FLAKY"], "tcmStatus": "NEEDS_ATTENTION" }
+}

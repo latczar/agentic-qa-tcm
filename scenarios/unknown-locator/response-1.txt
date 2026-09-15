@@ -1,0 +1,23 @@
+{
+  "testCaseId": "TC-014",
+  "fileName": "tc-014-sick-leave-past-date.spec.ts",
+  "title": "Sick leave can be recorded for a day in the past",
+  "usedPageObjects": [
+    "LeavePage",
+    "LeaveFormPage"
+  ],
+  "usedMethods": [
+    "LeavePage.goto",
+    "LeavePage.openRequestForm",
+    "LeaveFormPage.submitRequest",
+    "LeavePage.expectSuccess",
+    "LeavePage.expectRequestListed"
+  ],
+  "usedFixtures": [
+    "app",
+    "signInAs"
+  ],
+  "code": "import { addDays, expect, mondayWeeksAhead, test, users } from '../../src/fixtures/test.js';\n\ntest.describe('Leave requests', () => {\n  test('Sick leave can be recorded for a day in the past', { tag: '@TC-014' }, async ({ app, signInAs }) => {\n    await signInAs(users.qaEngineer);\n    const lastMonday = addDays(mondayWeeksAhead(1), -14);\n\n    await app.leave.goto();\n    await expect(app.leave.balanceBadge).toHaveText('20');\n    await app.leave.openRequestForm();\n    await app.leaveForm.submitRequest({ type: 'sick', startDate: lastMonday, endDate: lastMonday, reason: 'Flu' });\n\n    await app.leave.expectSuccess('Leave request submitted for approval (1 working day)');\n    await app.leave.expectRequestListed('lr-101', 'Pending');\n    await expect(app.leave.balanceBadge).toHaveText('20');\n  });\n});\n",
+  "assumptions": [],
+  "confidence": 0.8
+}

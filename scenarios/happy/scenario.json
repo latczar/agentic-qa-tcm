@@ -1,0 +1,5 @@
+{
+  "description": "A correct test first time. Every gate passes and the case goes to review.",
+  "testCaseId": "TC-014",
+  "expect": { "finalStatus": "PENDING_REVIEW", "attempts": 1, "failureClasses": [], "tcmStatus": "PENDING_REVIEW" }
+}

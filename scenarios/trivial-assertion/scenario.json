@@ -1,0 +1,5 @@
+{
+  "description": "Replaces the outcome assertions with expect(true).toBe(true), which passes without proving anything (G4 lint).",
+  "testCaseId": "TC-014",
+  "expect": { "finalStatus": "PENDING_REVIEW", "attempts": 2, "failureClasses": ["LINT_ERROR"], "tcmStatus": "PENDING_REVIEW" }
+}

@@ -133,3 +133,32 @@ Through the real protocol over an in-memory transport: a client connects, lists 
 
 **Why register the server in `.mcp.json`?**
 So the side-by-side demo is one command: open the repo in Claude Code and it has the same framework context the pipeline gives the local model. It also proves the server is a standalone, reusable thing rather than an internal detail.
+
+## Phase 5: the orchestrator
+
+**Why build the whole pipeline before touching a model?**
+Because everything except the model is deterministic and testable, and that is most of the system. With a replay provider serving canned responses, every failure path in the brief runs in CI, on every commit, with no GPU and no network. When the real model arrives it drops into an interface that already has two implementations and a scenario matrix waiting for it.
+
+**What is a scenario?**
+A folder with the expected outcome and one readable candidate test per attempt. A build step turns each candidate into the exact JSON a model would emit. The integration test runs every scenario through the real gates, Postgres, ESLint, tsc and Chromium, and asserts the final status, the attempt count, the failure classes and what the TCM was told. Twelve scenarios cover every failure in the brief: malformed output, framework violations, invented methods and locators, type errors, useless assertions, execution failures, flakiness, exhaustion, an unavailable model, and duplicate events.
+
+**Why is the context built through MCP when the manifest is right there in memory?**
+So the model's context comes through the same seven tools an IDE agent would use. The orchestrator is an MCP client connected in-process over an in-memory transport: same protocol, same tool outputs, no child process. Swapping in the stdio transport is a one-line change and nothing above it moves.
+
+**Why does the model return JSON instead of code?**
+A contract. The pipeline can refuse a reply before it ever writes a file, name exactly which field is wrong, and ask for a repair rather than a regeneration. The `usedMethods` field is the model's self-report; gate G2 compares it with the code and stores the accuracy, which is a number worth putting in a README.
+
+**Why gates in that order?**
+Cost. Parsing JSON is microseconds. Reading the AST is milliseconds. The compiler is seconds. The browser is tens of seconds. A candidate that fails G1 never costs a browser run, and the message it gets back is more precise than a stack trace would have been.
+
+**What did the first real run of the matrix find?**
+Every gate from G0 to G4 caught exactly what its scenario had planted. G5 failed for everything because Playwright's `--project` flag accepts several values and swallowed the file path that followed it. The artefact directory made it a two-minute diagnosis: one gates.json per attempt, one line naming the error. That is the argument for persisting everything.
+
+**Why is a flaky test never retried?**
+Regenerating would hide it. A test that passes once and fails once against a deterministic application is telling you something about the test or the application, and a human should look. The pipeline runs every candidate twice for exactly this reason.
+
+**Why does an unavailable model not count as an attempt?**
+Because the model was never asked. Attempts measure how many times the model tried and failed; deferrals measure how many times the infrastructure was not there. Mixing them would make a bad night for Ollama look like a bad model.
+
+**What happens to a failed candidate's file?**
+It is removed from the framework immediately and kept in the run's artefacts. `tests/generated` only ever holds candidates that passed every gate and are waiting for a human. A failing file can never sneak into the suite.
