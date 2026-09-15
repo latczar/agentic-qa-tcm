@@ -1,0 +1,30 @@
+<%- include('../partials/head') %>
+<div class="page-header">
+  <h1>My expenses</h1>
+  <a class="btn btn-primary" href="/expenses/new" data-testid="expense-submit-new">Submit an expense</a>
+</div>
+<p class="summary">Awaiting approval: <strong data-testid="expenses-pending-total"><%= pendingTotal %></strong></p>
+<% if (expenses.length === 0) { %>
+<p class="empty" data-testid="expenses-empty">You have no expense claims yet.</p>
+<% } else { %>
+<table class="table" data-testid="expenses-table">
+  <thead>
+    <tr><th>Date</th><th>Category</th><th>Description</th><th class="num">Amount</th><th>Status</th><th>Decision</th></tr>
+  </thead>
+  <tbody>
+    <% for (const x of expenses) { %>
+    <tr data-testid="expense-row-<%= x.id %>" data-expense-id="<%= x.id %>">
+      <td data-testid="expense-date-<%= x.id %>"><%= formatDate(x.incurredOn) %></td>
+      <td data-testid="expense-category-<%= x.id %>"><%= capitalise(x.category) %></td>
+      <td data-testid="expense-description-<%= x.id %>"><%= x.description %></td>
+      <td class="num" data-testid="expense-amount-<%= x.id %>"><%= formatPence(x.amountPence) %></td>
+      <td><span class="badge badge-<%= x.status %>" data-testid="expense-status-<%= x.id %>"><%= capitalise(x.status) %></span></td>
+      <td class="muted" data-testid="expense-decision-<%= x.id %>">
+        <% if (x.decidedById) { %><%= deciderName(x) %><% if (x.decisionComment) { %>: <%= x.decisionComment %><% } %><% } %>
+      </td>
+    </tr>
+    <% } %>
+  </tbody>
+</table>
+<% } %>
+<%- include('../partials/foot') %>

@@ -1,0 +1,21 @@
+<header class="topbar">
+  <a class="brand" href="/" data-testid="nav-brand"><%= appName %></a>
+  <% if (currentUser) { %>
+  <nav class="nav" aria-label="Main">
+    <a href="/" data-testid="nav-dashboard">Dashboard</a>
+    <a href="/employees" data-testid="nav-employees">Employees</a>
+    <a href="/leave" data-testid="nav-leave">Leave</a>
+    <a href="/expenses" data-testid="nav-expenses">Expenses</a>
+    <% if (currentUser.role !== 'employee') { %>
+    <a href="/approvals" data-testid="nav-approvals">Approvals</a>
+    <% } %>
+  </nav>
+  <div class="user">
+    <span data-testid="nav-user-name"><%= currentUser.firstName %> <%= currentUser.lastName %></span>
+    <span class="badge badge-role" data-testid="nav-user-role"><%= currentUser.role %></span>
+    <form method="post" action="/logout">
+      <button type="submit" class="btn btn-link" data-testid="nav-sign-out">Sign out</button>
+    </form>
+  </div>
+  <% } %>
+</header>

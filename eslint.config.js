@@ -13,5 +13,14 @@ export default defineConfig([
   ]),
   js.configs.recommended,
   tseslint.configs.recommended,
+  {
+    rules: {
+      // Express error handlers must declare four parameters even when `next` is unused.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+    },
+  },
   prettier,
 ]);

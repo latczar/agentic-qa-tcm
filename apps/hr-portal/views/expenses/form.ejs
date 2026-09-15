@@ -1,0 +1,37 @@
+<%- include('../partials/head') %>
+<section class="card narrow">
+  <h1>Submit an expense</h1>
+  <form method="post" action="/expenses" data-testid="expense-form" novalidate>
+    <div class="field">
+      <label for="category">Category</label>
+      <select id="category" name="category" data-testid="expense-category">
+        <% for (const c of categories) { %>
+        <option value="<%= c %>" <%= values.category === c ? 'selected' : '' %>><%= capitalise(c) %></option>
+        <% } %>
+      </select>
+      <%- include('../partials/field-error', { name: 'category', errors }) %>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="amount">Amount (£)</label>
+        <input id="amount" name="amount" type="text" inputmode="decimal" placeholder="12.50" value="<%= values.amount %>" data-testid="expense-amount" />
+        <%- include('../partials/field-error', { name: 'amount', errors }) %>
+      </div>
+      <div class="field">
+        <label for="incurredOn">Date incurred</label>
+        <input id="incurredOn" name="incurredOn" type="date" value="<%= values.incurredOn %>" data-testid="expense-incurred-on" />
+        <%- include('../partials/field-error', { name: 'incurredOn', errors }) %>
+      </div>
+    </div>
+    <div class="field">
+      <label for="description">Description</label>
+      <input id="description" name="description" type="text" value="<%= values.description %>" data-testid="expense-description" />
+      <%- include('../partials/field-error', { name: 'description', errors }) %>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" data-testid="expense-submit">Submit claim</button>
+      <a class="btn btn-link" href="/expenses" data-testid="expense-cancel-form">Cancel</a>
+    </div>
+  </form>
+</section>
+<%- include('../partials/foot') %>

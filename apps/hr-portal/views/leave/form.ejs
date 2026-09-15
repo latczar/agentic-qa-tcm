@@ -1,0 +1,38 @@
+<%- include('../partials/head') %>
+<section class="card narrow">
+  <h1>Request leave</h1>
+  <p class="muted">You have <strong data-testid="leave-form-remaining"><%= remaining %></strong> days of annual leave remaining.</p>
+  <form method="post" action="/leave" data-testid="leave-form" novalidate>
+    <div class="field">
+      <label for="type">Leave type</label>
+      <select id="type" name="type" data-testid="leave-type">
+        <% for (const t of leaveTypes) { %>
+        <option value="<%= t %>" <%= values.type === t ? 'selected' : '' %>><%= capitalise(t) %></option>
+        <% } %>
+      </select>
+      <%- include('../partials/field-error', { name: 'type', errors }) %>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="startDate">First day</label>
+        <input id="startDate" name="startDate" type="date" value="<%= values.startDate %>" data-testid="leave-start-date" />
+        <%- include('../partials/field-error', { name: 'startDate', errors }) %>
+      </div>
+      <div class="field">
+        <label for="endDate">Last day</label>
+        <input id="endDate" name="endDate" type="date" value="<%= values.endDate %>" data-testid="leave-end-date" />
+        <%- include('../partials/field-error', { name: 'endDate', errors }) %>
+      </div>
+    </div>
+    <div class="field">
+      <label for="reason">Reason (optional)</label>
+      <textarea id="reason" name="reason" rows="3" data-testid="leave-reason"><%= values.reason %></textarea>
+      <%- include('../partials/field-error', { name: 'reason', errors }) %>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" data-testid="leave-submit">Submit request</button>
+      <a class="btn btn-link" href="/leave" data-testid="leave-cancel-form">Cancel</a>
+    </div>
+  </form>
+</section>
+<%- include('../partials/foot') %>

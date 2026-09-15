@@ -1,0 +1,22 @@
+{
+  "name": "@aiqa/hr-portal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Harbour HR: a small, deterministic employee portal used as the system under test",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/express-session": "^1.19.0",
+    "tsx": "^4.23.13"
+  },
+  "dependencies": {
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0"
+  }
+}

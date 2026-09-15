@@ -1,0 +1,30 @@
+<%- include('partials/head') %>
+<h1 data-testid="dashboard-heading">Hello, <%= currentUser.firstName %></h1>
+<section class="stats">
+  <div class="stat" data-testid="stat-remaining-leave">
+    <span class="stat-value"><%= remaining %></span>
+    <span class="stat-label">days of annual leave remaining</span>
+  </div>
+  <div class="stat" data-testid="stat-pending-leave">
+    <span class="stat-value"><%= pendingLeave %></span>
+    <span class="stat-label">leave requests awaiting approval</span>
+  </div>
+  <div class="stat" data-testid="stat-pending-expenses">
+    <span class="stat-value"><%= pendingExpenses %></span>
+    <span class="stat-label">expense claims awaiting approval</span>
+  </div>
+  <% if (awaiting) { %>
+  <div class="stat stat-highlight" data-testid="stat-awaiting-my-approval">
+    <span class="stat-value"><%= awaiting.leave + awaiting.expenses %></span>
+    <span class="stat-label">items awaiting your approval</span>
+  </div>
+  <% } %>
+</section>
+<section class="actions">
+  <a class="btn btn-primary" href="/leave/new" data-testid="dashboard-request-leave">Request leave</a>
+  <a class="btn" href="/expenses/new" data-testid="dashboard-submit-expense">Submit an expense</a>
+  <% if (awaiting) { %>
+  <a class="btn" href="/approvals" data-testid="dashboard-go-to-approvals">Review approvals</a>
+  <% } %>
+</section>
+<%- include('partials/foot') %>

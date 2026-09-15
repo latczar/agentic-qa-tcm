@@ -1,0 +1,5 @@
+<% if (flash) { %>
+<div class="flash flash-<%= flash.kind %>" role="status" data-testid="flash-<%= flash.kind %>">
+  <%= flash.message %>
+</div>
+<% } %>
