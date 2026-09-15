@@ -19,7 +19,11 @@
     "compose:config": "docker compose config -q",
     "test": "vitest run",
     "test:e2e": "npm test -w packages/e2e-framework",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "manifest:build": "npm run build -w packages/framework-manifest",
+    "manifest:check": "npm run check -w packages/framework-manifest",
+    "mcp": "node --import tsx packages/mcp-server/src/stdio.ts",
+    "mcp:probe": "node --import tsx packages/mcp-server/src/probe.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -28,6 +32,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-playwright": "^2.12.0",
     "prettier": "^3.9.6",
+    "tsx": "^4.23.13",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0",
     "vitest": "^5.0.1"

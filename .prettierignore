@@ -4,3 +4,4 @@ artifacts
 playwright-report
 test-results
 package-lock.json
+packages/framework-manifest/framework-manifest.json

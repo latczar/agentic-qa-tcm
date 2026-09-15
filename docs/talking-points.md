@@ -107,3 +107,29 @@ Manual test cases are prose with structure, and people will edit them. YAML read
 
 **Why split unit and integration tests?**
 Unit tests for the transition rules and the seed validator run in milliseconds with no database. Integration tests for the repository run against the real Postgres, locally from Docker and in CI from a service container. The split keeps the fast loop fast and still proves the SQL.
+
+## Phase 4: manifest and MCP server
+
+**Why extract a manifest instead of giving the model the source files?**
+Three reasons. Size: a 7B model has a small context window and the manifest is a tenth of the source. Precision: signatures, test ids and JSDoc are what a test author needs; import lists and constructors are noise. Agreement: the validators in phase 5 check generated code against the same manifest, so what the model was shown and what it is held to are one artefact.
+
+**Why commit the manifest and check drift in CI?**
+Because a reviewer should be able to open one file and see exactly what the model was told, and trust that it matches the code. The check regenerates in memory and diffs. Forget to rebuild after changing a page object and CI fails with a one-line fix.
+
+**Why is the extractor built on the TypeScript compiler rather than regular expressions?**
+Because it has to be right, not roughly right. ts-morph gives real types, real inheritance and real JSDoc. Inherited members from BasePage are included and labelled, so the model knows `app.leave.expectSuccess()` exists without being shown BasePage separately.
+
+**How does method kind get inferred?**
+From the framework's own conventions: `goto*` is navigation, `expect*` is an assertion, a method returning a Locator is a locator, the rest are actions. The lint rules in phase 2 enforce the same naming, so the convention holds at both ends.
+
+**Why is every MCP tool read-only?**
+The model proposes; the pipeline disposes. If a tool could write a file or run a test, the model could act outside the gates. Keeping writes in the orchestrator is what makes the validation story honest.
+
+**Why does `search_symbols` exist when `get_page_object` already lists methods?**
+Because models invent names. The single most common failure in the design brief is "method does not exist". A search that maps an invented `submitLeave` to the real `LeaveFormPage.submitRequest` turns that failure into a correction, both when the model calls the tool itself and when the validator builds a retry message.
+
+**How are the tools tested?**
+Through the real protocol over an in-memory transport: a client connects, lists tools, calls each one, and checks the responses, including the error path for a typo and the refusal to read outside the framework directory. A separate probe launches the server over stdio exactly as `.mcp.json` does, which is the same way Claude Code launches it.
+
+**Why register the server in `.mcp.json`?**
+So the side-by-side demo is one command: open the repo in Claude Code and it has the same framework context the pipeline gives the local model. It also proves the server is a standalone, reusable thing rather than an internal detail.
