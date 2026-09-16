@@ -85,6 +85,8 @@ Open the mock TCM (http://localhost:4000/cases), mark a case Ready for Automatio
 3. n8n emails the reviewer (check Mailpit at http://localhost:8025).
 4. Approve or reject at the review inbox (http://localhost:5000/review) — approve promotes the file into the real Playwright suite and updates the TCM to `AUTOMATED`.
 
+![Flip a case to Ready for Automation, the orchestrator generates and validates a test, approve it in the review inbox, the TCM shows Automated](docs/media/demo.gif)
+
 To use a real model instead of the replay provider, install [Ollama](https://ollama.com), `ollama pull qwen2.5-coder:7b`, and set `LLM_PROVIDER=ollama` — see the honest results below before expecting it to pass on the first try.
 
 ## Failure gallery
