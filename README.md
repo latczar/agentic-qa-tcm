@@ -1,5 +1,7 @@
 # ai-qa-pipeline
 
+[![CI](https://github.com/latczar/agentic-qa-tcm/actions/workflows/ci.yml/badge.svg)](https://github.com/latczar/agentic-qa-tcm/actions/workflows/ci.yml)
+
 Local, free, AI-assisted Playwright test generation with deterministic validation and human review.
 
 A TestRail-style mock TCM holds manual test cases. When one is marked Ready for Automation, n8n dispatches it to a TypeScript orchestrator. The orchestrator gathers framework context through an MCP server, asks a local model (Ollama) for a structured test, runs the result through validation gates (response schema, framework structure, symbol existence, TypeScript, ESLint, Playwright execution), retries with feedback when a gate fails, and parks the candidate for human approval before the TCM is updated.
@@ -8,7 +10,7 @@ The model is one component. Everything else is ordinary, testable software. The 
 
 ## Status
 
-Phase 0 of 10: repository skeleton, Compose stack with Postgres and n8n, CI. The roadmap is in the architecture document.
+Phase 8 of 10: the full loop works end to end — mock TCM, HR Portal, Playwright framework, MCP server, orchestrator (context, generation, gates, retries, human review), and n8n scheduling with email notifications. The roadmap and phase-by-phase outcomes are in the architecture document.
 
 ## Prerequisites
 
