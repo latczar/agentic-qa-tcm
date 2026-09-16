@@ -232,3 +232,14 @@ An email that looked fine in the workflow editor but arrived at Mailpit with an 
 
 **Was the whole loop verified live, or just each half separately?**
 Live, end to end, more than once. A test case was flipped to `READY_FOR_AUTOMATION`, and with no manual `POST /runs`, n8n's own schedule trigger polled and created the run inside two minutes. Separately, a run driven through to `PENDING_REVIEW` produced a real SMTP email in Mailpit with the correct subject, run id and review link. One environment-specific snag surfaced along the way: this dev machine's Docker runs natively inside WSL2 (see the Docker Desktop bug in project memory), which adds an extra network hop `host.docker.internal` doesn't cross by default the way it does under real Docker Desktop — worked around locally for verification, not by changing the committed compose file, which is written for the normal, documented deployment target.
+
+## Phase 9: CI hardening
+
+**What was actually left to "harden" if the pipeline scenario matrix and Playwright suite already ran in CI from phase 5?**
+Less code than it sounds — the `checks`, `framework-e2e` and `integration` jobs were already correctly structured; hardening meant _verifying_ that, not rebuilding it. Every script name and artefact path (`test:integration`, `artifacts/integration-runs`, the Playwright HTML reporter's default output directory) was cross-checked against what the code actually writes before trusting the YAML, since a CI config that has never run for real is just a guess about the codebase written in a different syntax.
+
+**Why is the Ollama bench job `workflow_dispatch`-only rather than running on every push?**
+Two reasons. Practically, pulling and running a 7B model with no GPU on a shared runner is slow and would make every push wait on it. More importantly, phase 6 already found and documented that this model doesn't reliably pass every gate from scratch — a job that fails whenever the model fails would be a flaky, meaningless gate on every PR. What the job actually verifies is infrastructure: does Ollama still install, start, and answer a real request against the real HR Portal on a completely fresh machine. That's worth checking occasionally, by hand, not worth blocking a merge on.
+
+**Was this actually run on GitHub, or just read as YAML?**
+Run for real, on the first push — this was the point of the phase. `checks` (39s), `framework-e2e` (41s) and `integration` (139s) all passed; `bench-ollama` correctly reported as skipped, since a plain push isn't a manual dispatch. Both artefact uploads (`playwright-report`, `pipeline-artifacts`) were confirmed downloadable from the run itself, via the GitHub API, not assumed from the config.
