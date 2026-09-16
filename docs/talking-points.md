@@ -162,3 +162,39 @@ Because the model was never asked. Attempts measure how many times the model tri
 
 **What happens to a failed candidate's file?**
 It is removed from the framework immediately and kept in the run's artefacts. `tests/generated` only ever holds candidates that passed every gate and are waiting for a human. A failing file can never sneak into the suite.
+
+## Phase 6: the model
+
+**Why did the model arrive last?**
+Because by the time it did, every other part of the system was tested and every failure path had a scenario. The Ollama provider is one class behind the same interface the replay provider implements. Nothing in the pipeline changed to accommodate it except a health check that names the fix: "run ollama pull".
+
+**What is the difference between curated and agentic mode?**
+In curated mode the orchestrator decides everything the model sees and asks for constrained JSON. In agentic mode the model also gets the seven MCP tools and may look things up before answering. Both run the same gates afterwards; the mode is recorded on every attempt; tool calls are capped and logged. Agentic mode is the more impressive demo. Curated mode is cheaper, more predictable and easier to reproduce, and small models are often better at it. The bench measures rather than assumes.
+
+**Why constrained output, and why does it switch off when tools are on?**
+Ollama can force the reply to match a JSON schema, which removes a whole class of malformed responses from small models. But a model forced to emit the answer schema cannot emit a tool call, so while tools are offered the schema is withheld, and it comes back for the final turn once the model stops calling tools.
+
+**Why temperature zero?**
+Reproducibility beats creativity here. The same case with the same prompt should produce the same test as often as the hardware allows, so a change in outcome can be traced to a change in prompt, context or framework rather than dice.
+
+**Why a ten-minute timeout?**
+Because CPU inference of a 7B model on a laptop can take minutes, and a slow answer should become a deferral, not a crash. A timeout is classed with "model unavailable": the model was never really asked, so no attempt is spent.
+
+**Why does the provider report token counts?**
+So the attempt record can say how much context the model actually consumed against the estimate the context builder made. When those two drift apart the four-characters-per-token heuristic is wrong for that model, and the budget should be tuned.
+
+**How was the provider tested without a model?**
+Against a fake Ollama HTTP server: health with and without the model pulled, an unreachable server, the request shape (temperature, context size, schema, tools), the reply mapping including tool calls, and a hang becoming a timeout. The agent loop was tested with a scripted model against the real MCP server, so the tool definitions and results are genuine.
+
+**Why two prompt versions?**
+Prompt v1 asked for one JSON object with the whole test file escaped inside a string field, constrained with Ollama's JSON-schema mode. Against the real model this produced truncated code — a 7B model can't reliably keep track of escaping a few hundred lines inside a JSON string and also finish the file within a sane token budget. Prompt v2 asks for the file in a plain `ts fence and the metadata in a separate `json fence. Same model, same test case: complete files instead of truncated ones. The response format is declared per prompt version (`prompts/<version>/prompt.json`), so the gates and the agent loop treat it as data, not a hardcoded assumption.
+
+**Did the real model actually produce a passing test?**
+Not on the four `READY_FOR_AUTOMATION` cases, in either curated or agentic mode — see [docs/results.md](results.md) for the full run. That is a genuine, reportable result for a free local 7B model, not a pipeline failure: every attempt was stopped by a specific, correct gate (wrong test structure, an invented method, an unused import) and every run correctly reached `NEEDS_ATTENTION` rather than shipping something wrong. Two real bugs turned up while diagnosing this, both fixed and worth describing in an interview:
+
+1. The G2 "did you mean" hint only searched the same page object as the mistake, so when the model had the right method name on the wrong object it could never be told the actual fix.
+2. The worked example handed to the model used its own file's import depth, which didn't match where generated candidates are actually written — the model was faithfully copying a path that could never resolve.
+   Neither was found by reading code; both were found by reading what a real model actually did and refusing to shrug at "the retry didn't work".
+
+**What did retrying actually buy you?**
+Less than the plan hoped, and that is itself worth saying out loud. For TC-014, all three attempts produced byte-for-byte identical code, even on the attempt after the "did you mean" hint fix started pointing at the exactly correct method — the model anchored on the "your previous code" block and didn't restructure it. A fixed attempt cap that gives up and asks a human, rather than looping forever or accepting a fourth identical wrong answer, is doing real work here.

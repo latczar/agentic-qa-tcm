@@ -9,6 +9,7 @@ import {
 /** Simulates an outage or a hang, for the "model unavailable" scenario and for chaos tests. */
 export class FailingProvider implements LlmProvider {
   readonly name = 'failing';
+  readonly supportsTools = false;
   readonly model: string;
 
   constructor(private readonly mode: 'unavailable' | 'timeout' = 'unavailable') {

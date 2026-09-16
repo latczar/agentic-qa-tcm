@@ -51,12 +51,24 @@ export interface GenerationAttempt {
   gateReport: GateReport | null;
   failureClass: FailureClass | null;
   selfReport: SelfReport | null;
+  /** curated or agentic, as actually used for this attempt. */
+  mode: 'curated' | 'agentic';
+  /** Tool calls the model made in agentic mode, in order. */
+  agentLog: Array<{
+    tool: string;
+    arguments: Record<string, unknown>;
+    ok: boolean;
+    resultChars: number;
+    durationMs: number;
+  }>;
+  promptTokens: number | null;
+  completionTokens: number | null;
   durationMs: number;
 }
 
 /** What went into the prompt and how big it was. The first thing to read when a generation goes wrong. */
 export interface ContextReceipt {
-  mode: 'curated';
+  mode: 'curated' | 'agentic';
   tokenBudget: number;
   estimatedTokens: number;
   sections: Array<{ name: string; items: string[]; estimatedTokens: number }>;

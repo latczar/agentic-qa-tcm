@@ -4,13 +4,17 @@ import path from 'node:path';
 import * as prettier from 'prettier';
 import { FailureClass, RunStatus, TcmAutomationStatus } from '@aiqa/shared';
 import type { ContextBuilder } from '../context/builder.js';
+import type { FrameworkClient } from '../context/framework-client.js';
 import { render, type PromptTemplates } from '../context/prompts.js';
+import { OUTPUT_JSON_SCHEMA } from '../domain/output-schema.js';
 import { decide } from '../domain/retry-policy.js';
 import type {
   AttemptKind,
   ContextReceipt,
   GateReport,
+  GenerationAttempt,
   GenerationRun,
+  SelfReport,
   TestCase,
 } from '../domain/types.js';
 import { gateContract } from '../gates/g0-contract.js';
@@ -23,6 +27,7 @@ import {
 } from '../llm/provider.js';
 import type { RunRepository } from '../repo/runs.js';
 import type { TcmClient } from '../tcm/client.js';
+import { generate, type AgentLogEntry, type ContextMode } from './agent.js';
 import type { ArtefactStore } from './artefacts.js';
 import { feedbackFrom } from './feedback.js';
 
@@ -31,18 +36,24 @@ export interface PipelineDeps {
   provider: LlmProvider;
   runs: RunRepository;
   context: ContextBuilder;
+  /** MCP client of the framework-context server; the agent loop runs the model's tool calls through it. */
+  framework: FrameworkClient;
   gates: Gates;
   artefacts: ArtefactStore;
   prompts: PromptTemplates;
   frameworkRoot: string;
   maxAttempts: number;
   maxDeferrals: number;
+  mode: ContextMode;
+  maxToolCalls: number;
   /** For the replay provider: which scenario is playing. */
   scenario?: string;
   log?: (message: string) => void;
 }
 
 export const GENERATED_DIR = path.join('tests', 'generated');
+
+/** The output contract as JSON Schema, for providers that support constrained output. */
 
 /**
  * Idempotent entry point. One run per (test case, version): a second call with the same
@@ -102,8 +113,11 @@ export async function executeRun(deps: PipelineDeps, runId: string): Promise<Gen
 
   // 3. Build the context once. Retries append feedback rather than rebuilding.
   run = await deps.runs.update(run.id, { status: RunStatus.BUILDING_CONTEXT });
-  const { messages: baseMessages, receipt } = await deps.context.build(testCase);
-  const conversation: ChatMessage[] = [...baseMessages];
+  const built = await deps.context.build(testCase);
+  const mode: ContextMode =
+    deps.mode === 'agentic' && deps.provider.supportsTools ? 'agentic' : 'curated';
+  const receipt: ContextReceipt = { ...built.receipt, mode };
+  const conversation: ChatMessage[] = [...built.messages];
   let kind: AttemptKind = 'generate';
   let previousCode: string | null = null;
   let bestAttempt: { no: number; gatesPassed: number } | null = null;
@@ -111,17 +125,34 @@ export async function executeRun(deps: PipelineDeps, runId: string): Promise<Gen
   while (true) {
     const attemptNo = run.attempts + 1;
     run = await deps.runs.update(run.id, { status: RunStatus.GENERATING });
-    log(`${run.id}: attempt ${attemptNo}/${run.maxAttempts} (${kind})`);
+    log(`${run.id}: attempt ${attemptNo}/${run.maxAttempts} (${kind}, ${mode})`);
     const started = Date.now();
 
-    // 4. Ask the model.
+    // 4. Ask the model, with tools in agentic mode.
     let raw: string;
+    let agentLog: AgentLogEntry[] = [];
+    let promptTokens: number | null = null;
+    let completionTokens: number | null = null;
     try {
-      const response = await deps.provider.complete({
-        messages: conversation,
-        tag: { scenario: deps.scenario, attempt: attemptNo },
-      });
-      raw = response.text;
+      const result = await generate(
+        deps.provider,
+        deps.framework,
+        conversation,
+        {
+          mode,
+          maxToolCalls: deps.maxToolCalls,
+          jsonSchema: deps.prompts.responseFormat === 'json' ? OUTPUT_JSON_SCHEMA : undefined,
+        },
+        { scenario: deps.scenario, attempt: attemptNo },
+      );
+      raw = result.response.text;
+      agentLog = result.agentLog;
+      promptTokens = result.promptTokens;
+      completionTokens = result.completionTokens;
+      if (agentLog.length)
+        log(
+          `${run.id}: model made ${agentLog.length} tool call(s): ${agentLog.map((e) => e.tool).join(', ')}`,
+        );
     } catch (error) {
       if (error instanceof ProviderUnavailableError || error instanceof ProviderTimeoutError) {
         return defer(deps, run, error, log);
@@ -130,11 +161,38 @@ export async function executeRun(deps: PipelineDeps, runId: string): Promise<Gen
     }
     conversation.push({ role: 'assistant', content: raw });
 
+    const record = (
+      parsedOk: boolean,
+      report: GateReport,
+      failureClass: FailureClass | null,
+      selfReport: SelfReport | null,
+    ): GenerationAttempt => ({
+      runId,
+      attemptNo,
+      kind,
+      mode,
+      promptVersion: deps.prompts.version,
+      contextReceipt: receipt,
+      prompt: conversation
+        .slice(0, -1)
+        .map((m) => `[${m.role}${m.toolName ? `:${m.toolName}` : ''}]\n${m.content}`)
+        .join('\n\n'),
+      rawResponse: raw,
+      parsedOk,
+      gateReport: report,
+      failureClass,
+      selfReport,
+      agentLog,
+      promptTokens,
+      completionTokens,
+      durationMs: Date.now() - started,
+    });
+
     // 5. G0: is it even a valid response?
     const g0 = gateContract(raw, testCase.id);
     let report: GateReport;
     let code: string | null = null;
-    let selfReport = null;
+    let selfReport: SelfReport | null = null;
 
     if (!g0.parsed) {
       report = {
@@ -163,22 +221,7 @@ export async function executeRun(deps: PipelineDeps, runId: string): Promise<Gen
 
       if (report.passed) {
         const relPath = path.relative(deps.frameworkRoot, absPath).split(path.sep).join('/');
-        await deps.runs.addAttempt(
-          attemptRecord(
-            run,
-            attemptNo,
-            kind,
-            deps.prompts.version,
-            receipt,
-            conversation,
-            raw,
-            true,
-            report,
-            null,
-            selfReport,
-            started,
-          ),
-        );
+        await deps.runs.addAttempt(record(true, report, null, selfReport));
         await deps.artefacts.attempt(run.id, attemptNo, {
           messages: conversation,
           response: raw,
@@ -209,22 +252,7 @@ export async function executeRun(deps: PipelineDeps, runId: string): Promise<Gen
 
     // 7. Record the failed attempt and decide what to do next.
     const failureClass = report.failureClass ?? FailureClass.POLICY_VIOLATION;
-    await deps.runs.addAttempt(
-      attemptRecord(
-        run,
-        attemptNo,
-        kind,
-        deps.prompts.version,
-        receipt,
-        conversation,
-        raw,
-        Boolean(g0.parsed),
-        report,
-        failureClass,
-        selfReport,
-        started,
-      ),
-    );
+    await deps.runs.addAttempt(record(Boolean(g0.parsed), report, failureClass, selfReport));
     await deps.artefacts.attempt(run.id, attemptNo, {
       messages: conversation,
       response: raw,
@@ -270,7 +298,6 @@ export async function executeRun(deps: PipelineDeps, runId: string): Promise<Gen
       continue;
     }
 
-    // stop (defer cannot happen here: provider errors are handled above)
     const summary = `Stopped after ${attemptNo} attempt(s): ${failureClass} at ${report.failedGate}. Best attempt: ${bestAttempt.no}.`;
     run = await deps.runs.update(run.id, { status: RunStatus.NEEDS_ATTENTION, summary });
     await deps.tcm.report(testCase.id, {
@@ -321,39 +348,6 @@ async function defer(
   });
   log(`${run.id}: NEEDS_ATTENTION (model unavailable)`);
   return updated;
-}
-
-function attemptRecord(
-  run: GenerationRun,
-  attemptNo: number,
-  kind: AttemptKind,
-  promptVersion: string,
-  receipt: ContextReceipt,
-  conversation: ChatMessage[],
-  raw: string,
-  parsedOk: boolean,
-  report: GateReport,
-  failureClass: FailureClass | null,
-  selfReport: GenerationRun extends never ? never : import('../domain/types.js').SelfReport | null,
-  started: number,
-) {
-  return {
-    runId: run.id,
-    attemptNo,
-    kind,
-    promptVersion,
-    contextReceipt: receipt,
-    prompt: conversation
-      .slice(0, -1)
-      .map((m) => `[${m.role}]\n${m.content}`)
-      .join('\n\n'),
-    rawResponse: raw,
-    parsedOk,
-    gateReport: report,
-    failureClass,
-    selfReport,
-    durationMs: Date.now() - started,
-  };
 }
 
 /** Forces the file name onto the run's test case id so a wrong id in the response cannot misplace the file. */

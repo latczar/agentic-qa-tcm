@@ -37,3 +37,9 @@ CREATE TABLE IF NOT EXISTS generation_attempts (
   created_at       timestamptz NOT NULL DEFAULT now(),
   UNIQUE (run_id, attempt_no)
 );
+
+-- Phase 6: agentic mode and token accounting.
+ALTER TABLE generation_attempts ADD COLUMN IF NOT EXISTS mode text NOT NULL DEFAULT 'curated';
+ALTER TABLE generation_attempts ADD COLUMN IF NOT EXISTS agent_log jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE generation_attempts ADD COLUMN IF NOT EXISTS prompt_tokens integer;
+ALTER TABLE generation_attempts ADD COLUMN IF NOT EXISTS completion_tokens integer;

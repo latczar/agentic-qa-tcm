@@ -2,12 +2,13 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import type { FrameworkManifest } from '@aiqa/framework-manifest';
 import { createServer } from '@aiqa/mcp-server';
+import type { ToolDefinition } from '../llm/provider.js';
 
 /**
  * The orchestrator's window onto the framework: an MCP client of the framework-context server.
- * In phase 5 the server runs in-process over an in-memory transport, which is the same protocol
- * and the same tools as the stdio server, without a child process. A stdio transport can be
- * swapped in without touching the context builder.
+ * The server runs in-process over an in-memory transport, which is the same protocol and the same
+ * tools as the stdio server, without a child process. The context builder uses it to curate;
+ * the agent loop hands its tool list to the model and executes the calls the model makes.
  */
 export class FrameworkClient {
   private constructor(private readonly client: Client) {}
@@ -22,6 +23,16 @@ export class FrameworkClient {
     const client = new Client({ name: 'orchestrator', version: '0.1.0' });
     await client.connect(clientTransport);
     return new FrameworkClient(client);
+  }
+
+  /** The server's tools in the provider-neutral shape the agent loop hands to a model. */
+  async listTools(): Promise<ToolDefinition[]> {
+    const { tools } = await this.client.listTools();
+    return tools.map((t) => ({
+      name: t.name,
+      description: t.description ?? '',
+      parameters: (t.inputSchema as Record<string, unknown>) ?? { type: 'object', properties: {} },
+    }));
   }
 
   async callText(tool: string, args: Record<string, unknown> = {}): Promise<string> {

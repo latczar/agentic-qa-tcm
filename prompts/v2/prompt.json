@@ -1,0 +1,4 @@
+{
+  "responseFormat": "fenced",
+  "notes": "Code in a ts fence, metadata in a json fence. Small coder models handle this far better than a whole file escaped inside a JSON string, which is what v1 asked for."
+}

@@ -28,6 +28,10 @@ const FEATURE_PAGES: Record<string, string[]> = {
 };
 const ALWAYS = ['LoginPage'];
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
  * Curated context: the orchestrator decides what the model sees and stays inside a token budget.
  * Truncation order when over budget: drop the second example, then drop the lowest-ranked page
@@ -52,13 +56,23 @@ export class ContextBuilder {
       pageObjects.push({ name, text: formatPageObject(summary) });
     }
 
+    // Candidates always land in tests/generated/ (see GENERATED_DIR), one directory shallower
+    // than the exemplar specs under tests/e2e/<feature>/. Rewrite the import so the model copies
+    // a path that will actually resolve from where its file will be written, not the exemplar's.
+    const testModuleImport = `../../${this.manifest.testModule.replace(/\.ts$/, '.js')}`;
+    const importPattern = new RegExp(
+      `(?:\\.\\./)+${escapeRegExp(this.manifest.testModule.replace(/\.ts$/, '.js'))}`,
+      'g',
+    );
+
     const examples: Array<{ path: string; text: string }> = [];
     const exampleFiles = this.manifest.examples
       .filter((e) => e.feature === testCase.feature)
       .slice(0, 2);
     for (const example of exampleFiles) {
       const source = await this.framework.callText('get_example', { path: example.path });
-      examples.push({ path: example.path, text: `// ${example.path}\n${source}` });
+      const rewritten = source.replace(importPattern, testModuleImport);
+      examples.push({ path: example.path, text: `// ${example.path}\n${rewritten}` });
     }
 
     const fixed = {
@@ -91,9 +105,12 @@ export class ContextBuilder {
         ? JSON.stringify(testCase.testData, null, 2)
         : 'None',
       conventions,
-      testModuleImport: `../../${this.manifest.testModule.replace(/\.ts$/, '.js')}`,
+      testModuleImport,
       fixtures,
       pageObjects: pageObjects.map((p) => p.text).join('\n\n'),
+      allowedCalls: this.allowedCalls(pageObjects.map((p) => p.name)),
+      fixturesCompact: this.fixturesCompact(),
+      firstExample: examples[0] ? `\`\`\`ts\n${examples[0].text}\n\`\`\`` : 'None available.',
       examples: examples.length
         ? examples.map((e) => `\`\`\`ts\n${e.text}\n\`\`\``).join('\n\n')
         : 'None available.',
@@ -134,6 +151,44 @@ export class ContextBuilder {
       dropped,
     };
     return { messages, receipt };
+  }
+
+  /** One line per callable method on the selected page objects, in the exact form a spec uses. */
+  allowedCalls(names: string[]): string {
+    const fieldByClass = new Map(this.manifest.app.map((a) => [a.className, a.field]));
+    const lines: string[] = [];
+    for (const name of names) {
+      const po = this.manifest.pageObjects.find((p) => p.name === name);
+      const field = fieldByClass.get(name);
+      if (!po || !field) continue;
+      for (const m of po.methods) {
+        if (m.kind === 'locator') continue;
+        const params = m.params
+          .map((x) => `${x.name}${x.optional ? '?' : ''}: ${x.type}`)
+          .join(', ');
+        lines.push(`app.${field}.${m.name}(${params})`);
+      }
+    }
+    return lines.join('\n');
+  }
+
+  /** Fixtures, users, seeded ids and helpers as short lines rather than raw JSON. */
+  fixturesCompact(): string {
+    const m = this.manifest;
+    const sig = (params: Array<{ name: string; type: string }>) =>
+      params.map((x) => `${x.name}: ${x.type}`).join(', ');
+    return [
+      `Fixtures a test can destructure: ${m.fixtures.map((f) => `${f.name} (${f.description})`).join('; ')}`,
+      'Users (sign in with signInAs(users.<key>)):',
+      ...m.users.map(
+        (u) =>
+          `- users.${u.key}: ${u.firstName} ${u.lastName}, ${u.role}, ${u.id}. ${u.description}`,
+      ),
+      'Seeded record ids:',
+      ...m.seeded.map((x) => `- seeded.${x.key} = ${x.value}. ${x.description}`),
+      'Date helpers (import from the fixtures module):',
+      ...m.helpers.map((h) => `- ${h.name}(${sig(h.params)}): ${h.returns}. ${h.description}`),
+    ].join('\n');
   }
 
   /** Feature defaults first, then any other page object whose name shares a word with the steps. */
