@@ -55,6 +55,10 @@ services:
       N8N_SECURE_COOKIE: 'false'
       N8N_DIAGNOSTICS_ENABLED: 'false'
       N8N_PERSONALIZATION_ENABLED: 'false'
+      # The poll-and-dispatch schedule runs every 2 minutes and most ticks find nothing to do;
+      # without pruning, execution history grows forever for no reason.
+      EXECUTIONS_DATA_PRUNE: 'true'
+      EXECUTIONS_DATA_MAX_AGE: '168' # 7 days, in hours
       GENERIC_TIMEZONE: Europe/London
       TZ: Europe/London
     volumes:
