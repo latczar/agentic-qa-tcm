@@ -1,0 +1,51 @@
+{
+  "id": "aiqa-run-events-router",
+  "name": "AI QA — run events router",
+  "active": true,
+  "nodes": [
+    {
+      "id": "aiqa-rer-webhook",
+      "name": "Run event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [240, 300],
+      "webhookId": "aiqa-run-events",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "run-events",
+        "responseMode": "onReceived",
+        "responseCode": 200,
+        "options": {}
+      }
+    },
+    {
+      "id": "aiqa-rer-email",
+      "name": "Notify reviewer",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [460, 300],
+      "parameters": {
+        "fromEmail": "ai-qa-pipeline@local.test",
+        "toEmail": "reviewer@local.test",
+        "subject": "=AI-QA: {{$json.body.event}} — {{$json.body.testCaseId}} v{{$json.body.testCaseVersion}}",
+        "emailFormat": "text",
+        "text": "=Run {{$json.body.runId}} for {{$json.body.testCaseId}} v{{$json.body.testCaseVersion}} is now {{$json.body.status}}.\n\n{{$json.body.summary}}\n\n{{$json.body.candidatePath}}\n\nReview: {{$json.body.reviewUrl}}",
+        "options": {}
+      },
+      "credentials": {
+        "smtp": {
+          "id": "aiqa-mailpit-smtp",
+          "name": "Mailpit (local)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Run event": {
+      "main": [[{ "node": "Notify reviewer", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

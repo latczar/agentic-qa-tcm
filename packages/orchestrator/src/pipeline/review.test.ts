@@ -6,7 +6,16 @@ import { TcmAutomationStatus } from '@aiqa/shared';
 import type { TestCase } from '../domain/types.js';
 import { InMemoryRunRepository } from '../repo/runs.js';
 import { FakeTcmClient } from '../tcm/fake-client.js';
+import type { EventEmitter, RunEvent } from './events.js';
 import { applyReview, type ReviewDeps } from './review.js';
+
+/** Records every event so tests can assert what was announced, without a real HTTP server. */
+class SpyEventEmitter implements EventEmitter {
+  readonly events: RunEvent[] = [];
+  async emit(event: RunEvent): Promise<void> {
+    this.events.push(event);
+  }
+}
 
 const tc014: TestCase = {
   id: 'TC-014',
@@ -23,6 +32,7 @@ describe('applyReview', () => {
   let frameworkRoot: string;
   let runs: InMemoryRunRepository;
   let tcm: FakeTcmClient;
+  let events: SpyEventEmitter;
   let deps: ReviewDeps;
   const candidateRel = path.join('tests', 'generated', 'tc-014-sick-leave.spec.ts');
 
@@ -30,7 +40,8 @@ describe('applyReview', () => {
     frameworkRoot = await mkdtemp(path.join(tmpdir(), 'aiqa-review-'));
     runs = new InMemoryRunRepository();
     tcm = FakeTcmClient.fromCases([tc014], TcmAutomationStatus.PENDING_REVIEW);
-    deps = { runs, tcm, frameworkRoot };
+    events = new SpyEventEmitter();
+    deps = { runs, tcm, frameworkRoot, events, publicUrl: 'http://localhost:5000' };
     await mkdir(path.join(frameworkRoot, 'tests', 'generated'), { recursive: true });
     await writeFile(path.join(frameworkRoot, candidateRel), '// candidate\n', 'utf8');
   });
@@ -84,6 +95,13 @@ describe('applyReview', () => {
         note: 'looks good',
       },
     ]);
+
+    expect(events.events).toHaveLength(1);
+    expect(events.events[0]).toMatchObject({
+      event: 'run.approved',
+      runId: run.id,
+      reviewUrl: `http://localhost:5000/review/${run.id}`,
+    });
   });
 
   it('reject leaves the candidate in place and reports NEEDS_ATTENTION', async () => {
@@ -106,6 +124,9 @@ describe('applyReview', () => {
     expect(tcm.reports).toEqual([
       { id: 'TC-014', status: 'NEEDS_ATTENTION', note: 'wrong assertion' },
     ]);
+    expect(events.events).toEqual([
+      expect.objectContaining({ event: 'run.rejected', runId: run.id }),
+    ]);
   });
 
   it('refuses a run that already has a decision', async () => {
@@ -120,6 +141,7 @@ describe('applyReview', () => {
 
     expect(second).toEqual({ ok: false, reason: 'not_pending' });
     expect(tcm.reports).toHaveLength(1);
+    expect(events.events).toHaveLength(1);
   });
 
   it('returns not_found for an unknown run', async () => {

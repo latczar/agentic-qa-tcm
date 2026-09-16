@@ -27,10 +27,24 @@ services:
 
   # n8n keeps its own state (workflows, credentials, encryption key) in SQLite inside its volume.
   # It is deliberately independent of Postgres: n8n is scheduling glue, the orchestrator owns run state.
+  # The two workflows and the Mailpit credential are committed as plain JSON under n8n/import/ and
+  # (re-)imported every time the container starts, so `docker compose up` alone reproduces them —
+  # nothing to click through by hand. mock-tcm, the orchestrator and hr-portal run on the host
+  # (phase 9 moves them into Compose), so n8n reaches them via host.docker.internal.
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
     container_name: aiqa-n8n
     restart: unless-stopped
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        n8n import:credentials --input=/import/credentials/mailpit-smtp.json
+        n8n import:workflow --separate --input=/import/workflows
+        n8n publish:workflow --id=aiqa-poll-and-dispatch
+        n8n publish:workflow --id=aiqa-run-events-router
+        exec n8n start
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     ports:
       - '${N8N_PORT:-5678}:5678'
     environment:
@@ -45,6 +59,19 @@ services:
       TZ: Europe/London
     volumes:
       - n8n-data:/home/node/.n8n
+      - ./n8n/import:/import:ro
+    depends_on:
+      - mailpit
+
+  # SMTP catcher for local review notifications: n8n sends real SMTP mail here, nothing leaves
+  # the machine. Web UI at MAILPIT_UI_PORT shows every message n8n sends.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: aiqa-mailpit
+    restart: unless-stopped
+    ports:
+      - '${MAILPIT_SMTP_PORT:-1025}:1025'
+      - '${MAILPIT_UI_PORT:-8025}:8025'
 
 volumes:
   postgres-data:

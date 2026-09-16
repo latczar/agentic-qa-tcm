@@ -44,7 +44,7 @@ flowchart LR
   REPLAY["Replay provider<br/>canned responses"]
 
   N8N -->|"poll READY_FOR_AUTOMATION"| TCM
-  N8N -->|"POST /runs + Idempotency-Key"| API
+  N8N -->|"POST /runs (idempotent)"| API
   API --> SM --> CTX --> AG --> VAL --> REV
   CTX --> MCP
   AG <--> MCP
@@ -62,16 +62,16 @@ flowchart LR
 
 ### How the pieces talk
 
-| From         | To           | Protocol                 | Notes                                                       |
-| ------------ | ------------ | ------------------------ | ----------------------------------------------------------- |
-| n8n          | Mock TCM     | HTTP                     | Poll cases, TestRail-shaped endpoints                       |
-| n8n          | Orchestrator | HTTP                     | `POST /runs` with `Idempotency-Key: <caseId>:<version>`     |
-| Orchestrator | Mock TCM     | HTTP                     | Status updates, notes, automation reference                 |
-| Orchestrator | MCP server   | MCP over stdio (spawned) | Real MCP SDK. HTTP transport also available for IDE clients |
-| Orchestrator | Ollama       | HTTP                     | `/api/chat` with tools and JSON schema format               |
-| Orchestrator | Framework    | child processes          | `tsc --noEmit`, `eslint`, `playwright test`                 |
-| Framework    | HR Portal    | browser                  | `baseURL` from config, `data-testid` locators               |
-| Orchestrator | n8n          | HTTP webhook             | Emits run events for notifications                          |
+| From         | To           | Protocol                 | Notes                                                                                                                         |
+| ------------ | ------------ | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| n8n          | Mock TCM     | HTTP                     | Poll cases, TestRail-shaped endpoints                                                                                         |
+| n8n          | Orchestrator | HTTP                     | `POST /runs { test_case_id }`; idempotent via the unique `(test_case_id, test_case_version)` index, no separate header needed |
+| Orchestrator | Mock TCM     | HTTP                     | Status updates, notes, automation reference                                                                                   |
+| Orchestrator | MCP server   | MCP over stdio (spawned) | Real MCP SDK. HTTP transport also available for IDE clients                                                                   |
+| Orchestrator | Ollama       | HTTP                     | `/api/chat` with tools and JSON schema format                                                                                 |
+| Orchestrator | Framework    | child processes          | `tsc --noEmit`, `eslint`, `playwright test`                                                                                   |
+| Framework    | HR Portal    | browser                  | `baseURL` from config, `data-testid` locators                                                                                 |
+| Orchestrator | n8n          | HTTP webhook             | Emits run events for notifications                                                                                            |
 
 ## 3. Components and responsibilities
 
@@ -148,16 +148,17 @@ Modules:
 - **Runners**: thin wrappers around `tsc`, `eslint` and `playwright test` as child processes, with parsed output.
 - **Review API and UI**: list pending candidates, show diff, gate report and Playwright report, approve or reject with a comment. Plain server-rendered HTML.
 - **Artefact store**: `artifacts/runs/<runId>/attempt-<n>/` holding prompt, raw response, generated spec, gate report, Playwright report and trace. Git-ignored locally, uploaded in CI.
-- **Event emitter**: webhooks to n8n on `run.pending_review`, `run.needs_attention`, `run.approved`, `run.deferred`.
+- **Event emitter**: webhooks to n8n on `run.pending_review`, `run.needs_attention`, `run.deferred`, `run.approved`, `run.rejected`. Best-effort and fire-and-forget: a delivery failure is logged, never allowed to fail a run. A no-op implementation is used when no webhook URL is configured, so every existing test and CI job runs unchanged.
 
 ### 3.7 n8n (`n8n/`)
 
-Local n8n in Docker, used as the scheduling and integration layer, not as the brain. Workflows are exported as JSON and auto-imported on `docker compose up`.
+Local n8n in Docker, used as the scheduling and integration layer, not as the brain. The two workflows and the Mailpit SMTP credential are committed as plain JSON under `n8n/import/` and re-imported every time the container starts (`n8n import:workflow`, `n8n import:credentials`, then `n8n publish:workflow` for each, since n8n's single-instance mode persists activation as a DB flag rather than accepting it from the import file directly) — `docker compose up` alone reproduces both, active, with nothing to click through by hand. No real secret is involved: Mailpit accepts unauthenticated local SMTP, so the credential JSON is safe to commit.
 
 n8n keeps its own state (workflows, credentials, encryption key) in SQLite inside its Docker volume. It does not use the project's Postgres, so it needs no database configuration and cannot be confused with the pipeline's own state. Switching it to Postgres is six environment variables if that is ever needed.
 
-- **Workflow A, poll and dispatch**: Schedule trigger (every 2 minutes) → fetch `READY_FOR_AUTOMATION` cases → for each, `POST /runs` with an idempotency key → log created versus duplicate.
-- **Workflow B, event router**: Webhook receives run events → routes to notifications (an email to the reviewer, caught locally by Mailpit, an SMTP catcher with a web UI and REST API) and any extra TCM annotations.
+- **Workflow A, poll and dispatch**: Schedule trigger (every 2 minutes) → `GET /api/cases?automation_status=READY_FOR_AUTOMATION` → one item per case → `POST /runs` for each. No explicit idempotency key is needed on the call itself: `POST /runs` is already idempotent (unique `(test_case_id, test_case_version)` in Postgres), so polling the same ready case on every tick is safe and simply returns the existing run until it leaves `READY_FOR_AUTOMATION`.
+- **Workflow B, event router**: Webhook (`POST /webhook/run-events`) receives the orchestrator's run events and emails the reviewer, caught locally by Mailpit (an SMTP catcher with a web UI and REST API, ports 1025/8025).
+- mock-tcm, the orchestrator and hr-portal run on the host rather than in Compose (phase 9 moves them in), so n8n reaches them via `host.docker.internal` (`extra_hosts: host.docker.internal:host-gateway`); the orchestrator reaches n8n via its published port, `http://localhost:5678`.
 
 The orchestrator is the source of truth for run state. n8n is stateless glue. This avoids two systems disagreeing about where a run is, and it means the whole pipeline is testable in CI without n8n.
 
@@ -168,8 +169,8 @@ Local model server, run on the host rather than in Compose. Model is configurabl
 ## 4. End-to-end flow
 
 1. A tester sets `TC-014` to `READY_FOR_AUTOMATION` in the mock TCM.
-2. n8n polls, finds it, and calls `POST /runs` with `Idempotency-Key: TC-014:3`.
-3. Orchestrator checks the unique index. Existing run → `200 duplicate`, nothing else happens. New → claims the case atomically in the TCM (status `AUTOMATION_IN_PROGRESS`), creates the run, responds `202`.
+2. n8n polls, finds it, and calls `POST /runs { test_case_id: "TC-014" }`.
+3. Orchestrator checks the unique index. Existing run → `200`, `created: false`, nothing else happens. New → claims the case atomically in the TCM (status `AUTOMATION_IN_PROGRESS`), creates the run, responds `202`.
 4. Context builder fetches the case, ranks framework context by feature tag, asks the MCP server for the selected page objects, fixtures, conventions and one or two exemplar tests, and writes a context receipt.
 5. Agent loop sends the prompt to the provider. In agentic mode the model may call MCP tools (capped at 6 calls). The final answer must be JSON matching `GeneratedTestSchema`.
 6. Gates run in order. First failure produces a structured error list.
@@ -269,8 +270,8 @@ Maximum three attempts per run (configurable). After the last failure the run go
 
 ## 9. Idempotency
 
-- The event identity is `(test_case_id, test_case_version)`. A unique index enforces one run per identity.
-- n8n sends `Idempotency-Key: <caseId>:<version>`. The orchestrator returns `200` with the existing run for a repeat, `202` for a new run. Duplicate deliveries, double-fired schedules and manual re-polls all collapse to a no-op that is logged as `duplicate`.
+- The event identity is `(test_case_id, test_case_version)`. A unique index enforces one run per identity; no separate idempotency key header is needed because the identity is already in the request body.
+- `POST /runs` returns `200` with the existing run and `created: false` for a repeat, `202` and `created: true` for a new run. Duplicate deliveries, double-fired schedules and n8n polling the same still-`READY` case on every tick all collapse to a no-op.
 - The TCM claim is atomic (`UPDATE ... WHERE status = READY AND version = $v`), so even if two orchestrator instances raced, only one would claim.
 - Gate execution is idempotent by construction: the same candidate file and manifest always produce the same `GateReport`. There is a test that asserts this for every scenario fixture.
 - Re-running a run (`npm run pipeline -- --rerun <runId>`) creates a new attempt, never a new run.
@@ -369,7 +370,7 @@ Each phase ends with something runnable and tested. The AI arrives late on purpo
 | 5     | Orchestrator core (walking skeleton) | DB schema, state machine, API and CLI, context builder, output schema, gates G0 to G5, retry policy, run report, artefact store, **replay provider**, every failure scenario as a test | 12 scenarios through the real pipeline (Postgres, tsc, ESLint, Chromium) end as their scenario.json says; 120 unit tests; CLI and idempotent HTTP API                                                                                                                      |
 | 6     | Ollama and agentic loop              | provider with health check and timeouts, MCP client tool calling, curated fallback, prompt iteration, metrics capture                                                                  | recorded results (`docs/results.md`) for both modes against the 4 ready cases: 0/4 reached review with `qwen2.5-coder:7b`, every attempt stopped by a correct, specific gate; two real pipeline bugs found and fixed while diagnosing (G2 hint scope, example import path) |
 | 7     | Human review                         | review UI and API, promote on approve, TCM update, audit record                                                                                                                        | approve and reject paths under test (unit + live browser/curl walkthrough); atomic review guard against double-decision; approve verified end-to-end against real Postgres and the real mock TCM                                                                           |
-| 8     | n8n                                  | both workflows exported and auto-imported, idempotency key, Mailpit for review emails, screenshots                                                                                     | flipping a status in the TCM UI produces a run with no manual steps                                                                                                                                                                                                        |
+| 8     | n8n                                  | both workflows and the Mailpit credential committed as JSON, auto-imported and auto-published on `docker compose up`, orchestrator event emitter                                       | verified live: flipping a case to `READY_FOR_AUTOMATION` produces a run with no manual steps, and the run's outcome produces a real SMTP email caught by Mailpit                                                                                                           |
 | 9     | CI hardening                         | pipeline e2e job with replay provider, scenario matrix, artefact upload, badges, manual Ollama job                                                                                     | all jobs green; reports downloadable from a run                                                                                                                                                                                                                            |
 | 10    | Polish and stretch                   | README with diagram and failure gallery, demo GIF, ADRs, results; stretch: G6 sabotage gate, TCM MCP server, branch-based review                                                       | repo reads well cold                                                                                                                                                                                                                                                       |
 

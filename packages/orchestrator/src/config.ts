@@ -29,6 +29,10 @@ export interface OrchestratorConfig {
   artifactsDir: string;
   frameworkRoot: string;
   manifestPath: string;
+  /** Where run events (pending_review, needs_attention, deferred, approved, rejected) are POSTed. Unset disables the emitter entirely. */
+  eventsWebhookUrl: string | undefined;
+  /** Base URL for links back into this instance, e.g. the review page in a notification email. */
+  publicUrl: string;
 }
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -55,5 +59,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): OrchestratorCo
     artifactsDir: env.ARTIFACTS_DIR ?? path.join(repoRoot, 'artifacts', 'runs'),
     frameworkRoot: env.FRAMEWORK_ROOT ?? DEFAULT_FRAMEWORK_ROOT,
     manifestPath: env.MANIFEST_PATH ?? DEFAULT_MANIFEST_PATH,
+    eventsWebhookUrl: env.EVENTS_WEBHOOK_URL,
+    publicUrl: env.PUBLIC_URL ?? `http://localhost:${Number(env.PORT ?? 5000)}`,
   };
 }

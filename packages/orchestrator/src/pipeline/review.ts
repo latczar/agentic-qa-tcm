@@ -4,11 +4,14 @@ import { RunStatus, TcmAutomationStatus } from '@aiqa/shared';
 import type { GenerationRun } from '../domain/types.js';
 import type { RunRepository } from '../repo/runs.js';
 import type { TcmClient } from '../tcm/client.js';
+import { toRunEvent, type EventEmitter } from './events.js';
 
 export interface ReviewDeps {
   runs: RunRepository;
   tcm: TcmClient;
   frameworkRoot: string;
+  events: EventEmitter;
+  publicUrl: string;
 }
 
 export interface ReviewInput {
@@ -51,6 +54,7 @@ export async function applyReview(
       status: TcmAutomationStatus.NEEDS_ATTENTION,
       note: input.comment ?? reviewed.summary,
     });
+    await deps.events.emit(toRunEvent('run.rejected', reviewed, deps.publicUrl));
     return { ok: true, run: reviewed };
   }
 
@@ -70,5 +74,6 @@ export async function applyReview(
     note: input.comment ?? reviewed.summary,
   });
   const run = await deps.runs.update(runId, { candidatePath: destRel });
+  await deps.events.emit(toRunEvent('run.approved', run, deps.publicUrl));
   return { ok: true, run };
 }

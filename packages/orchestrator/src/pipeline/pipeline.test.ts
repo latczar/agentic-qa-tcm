@@ -12,6 +12,7 @@ import { ReplayProvider } from '../llm/replay-provider.js';
 import { InMemoryRunRepository } from '../repo/runs.js';
 import { FakeTcmClient } from '../tcm/fake-client.js';
 import { NullArtefactStore } from './artefacts.js';
+import { NullEventEmitter } from './events.js';
 import { executeRun, startRun, type PipelineDeps } from './run-pipeline.js';
 
 // The pipeline's control flow with fake gates: claiming, idempotency, retry kinds, deferral,
@@ -112,6 +113,8 @@ function deps(
     framework,
     mode: 'curated',
     maxToolCalls: 6,
+    events: new NullEventEmitter(),
+    publicUrl: 'http://localhost:5000',
     ...overrides,
   };
 }
