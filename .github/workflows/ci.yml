@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -82,3 +83,42 @@ jobs:
           name: pipeline-artifacts
           path: artifacts/integration-runs
           retention-days: 7
+
+  # Manual only: proves the Ollama wiring still works end to end on a fresh machine. Not a
+  # quality gate and never blocks a merge — phase 6 already found and documented that this model
+  # doesn't reliably pass every gate from scratch (see docs/results.md), so a low pass rate here
+  # is expected, not a CI failure. What this job actually checks is infrastructure: install,
+  # pull, health check, a full generate-validate-retry cycle against the real HR Portal.
+  bench-ollama:
+    name: real-model bench (manual, informational)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+      - name: Start Ollama and pull the model
+        run: |
+          ollama serve > /tmp/ollama.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:11434/api/tags > /dev/null && break
+            sleep 2
+          done
+          ollama pull qwen2.5-coder:7b
+      - name: Bench against a single case, curated mode (CPU inference is slow; this is a wiring smoke test, not a benchmark)
+        run: npm run pipeline -- bench --provider ollama --cases TC-014 --out docs/results-ci.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ollama-bench-results
+          path: |
+            docs/results-ci.md
+            artifacts/runs
+          retention-days: 14
