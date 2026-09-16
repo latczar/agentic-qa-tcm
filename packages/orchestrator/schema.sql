@@ -43,3 +43,8 @@ ALTER TABLE generation_attempts ADD COLUMN IF NOT EXISTS mode text NOT NULL DEFA
 ALTER TABLE generation_attempts ADD COLUMN IF NOT EXISTS agent_log jsonb NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE generation_attempts ADD COLUMN IF NOT EXISTS prompt_tokens integer;
 ALTER TABLE generation_attempts ADD COLUMN IF NOT EXISTS completion_tokens integer;
+
+-- Phase 7: human review decision. One decision per run, so columns rather than a side table.
+ALTER TABLE generation_runs ADD COLUMN IF NOT EXISTS reviewed_by text;
+ALTER TABLE generation_runs ADD COLUMN IF NOT EXISTS reviewed_at timestamptz;
+ALTER TABLE generation_runs ADD COLUMN IF NOT EXISTS review_comment text;

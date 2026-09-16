@@ -26,6 +26,9 @@ export interface GenerationRun {
   bestAttempt: number | null;
   failureClass: FailureClass | null;
   summary: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  reviewComment: string | null;
   createdAt: string;
   updatedAt: string;
 }

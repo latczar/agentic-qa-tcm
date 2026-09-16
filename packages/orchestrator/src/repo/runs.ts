@@ -25,12 +25,24 @@ export type RunPatch = Partial<
   >
 >;
 
+export interface ReviewDecision {
+  status: Extract<GenerationRun['status'], 'APPROVED' | 'REJECTED'>;
+  reviewedBy: string;
+  reviewComment: string | null;
+}
+
 /** Persistence for runs and attempts. Postgres in real use, memory in unit tests. */
 export interface RunRepository {
   /** Inserts unless a run already exists for (testCaseId, version). Returns which happened. */
   create(run: NewRun): Promise<{ created: boolean; run: GenerationRun }>;
   get(id: string): Promise<GenerationRun | undefined>;
   update(id: string, patch: RunPatch): Promise<GenerationRun>;
+  /**
+   * Records a human decision, atomically guarded on the run still being PENDING_REVIEW so a
+   * double-click or two reviewers racing cannot both win. Returns undefined if the guard failed
+   * or the run does not exist.
+   */
+  review(id: string, decision: ReviewDecision): Promise<GenerationRun | undefined>;
   addAttempt(attempt: GenerationAttempt): Promise<void>;
   attempts(runId: string): Promise<GenerationAttempt[]>;
   list(limit?: number): Promise<GenerationRun[]>;
@@ -60,6 +72,9 @@ export class InMemoryRunRepository implements RunRepository {
       bestAttempt: null,
       failureClass: null,
       summary: null,
+      reviewedBy: null,
+      reviewedAt: null,
+      reviewComment: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -75,6 +90,22 @@ export class InMemoryRunRepository implements RunRepository {
     const run = this.runs.get(id);
     if (!run) throw new Error(`Run ${id} not found`);
     const updated = { ...run, ...patch, updatedAt: new Date().toISOString() };
+    this.runs.set(id, updated);
+    return updated;
+  }
+
+  async review(id: string, decision: ReviewDecision) {
+    const run = this.runs.get(id);
+    if (!run || run.status !== 'PENDING_REVIEW') return undefined;
+    const now = new Date().toISOString();
+    const updated: GenerationRun = {
+      ...run,
+      status: decision.status,
+      reviewedBy: decision.reviewedBy,
+      reviewedAt: now,
+      reviewComment: decision.reviewComment,
+      updatedAt: now,
+    };
     this.runs.set(id, updated);
     return updated;
   }
@@ -110,6 +141,9 @@ interface RunRow {
   best_attempt: number | null;
   failure_class: FailureClass | null;
   summary: string | null;
+  reviewed_by: string | null;
+  reviewed_at: Date | null;
+  review_comment: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -181,6 +215,17 @@ export class PgRunRepository implements RunRepository {
     );
     if (!rows[0]) throw new Error(`Run ${id} not found`);
     return toRun(rows[0]);
+  }
+
+  async review(id: string, decision: ReviewDecision) {
+    const { rows } = await this.db.query<RunRow>(
+      `UPDATE generation_runs
+       SET status = $2, reviewed_by = $3, reviewed_at = now(), review_comment = $4, updated_at = now()
+       WHERE id = $1 AND status = 'PENDING_REVIEW'
+       RETURNING *`,
+      [id, decision.status, decision.reviewedBy, decision.reviewComment],
+    );
+    return rows[0] ? toRun(rows[0]) : undefined;
   }
 
   async addAttempt(a: GenerationAttempt) {
@@ -258,6 +303,9 @@ function toRun(r: RunRow): GenerationRun {
     bestAttempt: r.best_attempt,
     failureClass: r.failure_class,
     summary: r.summary,
+    reviewedBy: r.reviewed_by,
+    reviewedAt: r.reviewed_at ? new Date(r.reviewed_at).toISOString() : null,
+    reviewComment: r.review_comment,
     createdAt: new Date(r.created_at).toISOString(),
     updatedAt: new Date(r.updated_at).toISOString(),
   };

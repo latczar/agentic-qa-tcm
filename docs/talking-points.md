@@ -198,3 +198,20 @@ Not on the four `READY_FOR_AUTOMATION` cases, in either curated or agentic mode 
 
 **What did retrying actually buy you?**
 Less than the plan hoped, and that is itself worth saying out loud. For TC-014, all three attempts produced byte-for-byte identical code, even on the attempt after the "did you mean" hint fix started pointing at the exactly correct method — the model anchored on the "your previous code" block and didn't restructure it. A fixed attempt cap that gives up and asks a human, rather than looping forever or accepting a fourth identical wrong answer, is doing real work here.
+
+## Phase 7: human review
+
+**Why columns on `generation_runs` instead of a `review_decisions` table, when the architecture doc originally planned one?**
+A run has exactly one decision, ever — it is a terminal state, not a history. A side table would exist only to hold a single row per run, which is a join for no benefit. The same reasoning already put each attempt's gate report in a `jsonb` column rather than its own table. Reach for a new table when there is a one-to-many relationship to model, not by default.
+
+**How is a double-click or two reviewers racing handled?**
+The same way the TCM's `claim()` already does it: one atomic, conditional `UPDATE ... WHERE status = 'PENDING_REVIEW'`. Whoever's update actually changes a row is the only one who proceeds to touch the filesystem or call the TCM. This was tested by calling `applyReview` twice on the same run and asserting the second call returns `not_pending` and the TCM was reported to exactly once.
+
+**Why does reject keep the file instead of deleting it, when a failed gate always deletes the candidate?**
+Different situation. A candidate that fails a gate never proved anything — deleting it is correct because keeping it would just be broken code cluttering the tree. A candidate that reaches `PENDING_REVIEW` already passed every deterministic gate the pipeline has; a human rejecting it is a judgement call the gates could not make (style, a business nuance, a subtly wrong assertion), not proof the code is broken. Keeping it in `tests/generated/` means a person can pick it up and fix it rather than starting from nothing.
+
+**Why is the review UI hand-written HTML instead of a template engine?**
+There are three pages. Pulling in EJS (already used by the HR Portal) for three server-rendered strings would be a dependency for its own sake. The templates are plain functions returning strings, which makes them trivial to unit test directly — no HTTP server needed to check that generated code is HTML-escaped before it reaches `<pre>`, for instance.
+
+**How was the approve path actually verified?**
+Not just unit tests. The happy replay scenario was run against the real Postgres database and the real mock TCM, the orchestrator API was started for real, and the review pages were opened in a browser and driven with the same HTTP requests a submitted form makes. The file moved from `tests/generated/` into `tests/e2e/leave/` on disk, the TCM's real record flipped to `AUTOMATED` with the right `automation_ref`, and a second decision attempt on the same run correctly got a 409. That test file was then removed again before committing — it was a manual verification, not a deliberate addition to the framework's exemplar suite, and leaving it in would have silently inflated the manifest's example count for no reason anyone chose.

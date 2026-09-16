@@ -5,6 +5,7 @@ import { loadConfig, type ContextMode, type ProviderName } from './config.js';
 import type { GenerationAttempt, GenerationRun } from './domain/types.js';
 import { ReplayProvider } from './llm/replay-provider.js';
 import { executeRun, startRun, type PipelineDeps } from './pipeline/run-pipeline.js';
+import { applyReview } from './pipeline/review.js';
 import { FakeTcmClient } from './tcm/fake-client.js';
 import { InMemoryRunRepository, wire } from './wiring.js';
 
@@ -14,6 +15,7 @@ import { InMemoryRunRepository, wire } from './wiring.js';
  * npm run pipeline -- bench --cases TC-005,TC-014,TC-034,TC-045 --provider ollama [--mode agentic] [--out docs/results.md]
  * npm run pipeline -- scenarios
  * npm run pipeline -- show <runId>
+ * npm run pipeline -- review <runId> approve|reject --by <name> [--comment <text>]
  */
 const [command, ...rest] = process.argv.slice(2);
 const flag = (name: string) => {
@@ -155,9 +157,40 @@ if (command === 'scenarios') {
   } finally {
     await deps.close();
   }
+} else if (command === 'review') {
+  const [runId, decisionArg] = rest;
+  if ((decisionArg !== 'approve' && decisionArg !== 'reject') || !runId) {
+    throw new Error('Usage: pipeline review <runId> approve|reject --by <name> [--comment <text>]');
+  }
+  const reviewer = flag('by');
+  if (!reviewer) throw new Error('Pass --by <name>.');
+  const deps = await wire({
+    config,
+    provider: {
+      name: 'none',
+      model: 'none',
+      supportsTools: false,
+      health: async () => {},
+      complete: async () => {
+        throw new Error('read-only');
+      },
+    },
+  });
+  try {
+    const outcome = await applyReview(deps, runId, {
+      decision: decisionArg,
+      reviewer,
+      comment: flag('comment') ?? null,
+    });
+    if (!outcome.ok) throw new Error(`Could not record decision: ${outcome.reason}`);
+    console.log(`${outcome.run.id}: ${outcome.run.status} (reviewed by ${reviewer})`);
+    if (outcome.run.candidatePath) console.log(`Candidate: ${outcome.run.candidatePath}`);
+  } finally {
+    await deps.close();
+  }
 } else {
   console.error(
-    'Usage: pipeline run|bench|scenarios|show. See the comment at the top of src/cli.ts.',
+    'Usage: pipeline run|bench|scenarios|show|review. See the comment at the top of src/cli.ts.',
   );
   process.exitCode = 2;
 }
