@@ -14,17 +14,37 @@ npm run pipeline -- run --scenario unknown-method --tcm fake --memory
 
 `--tcm fake` uses an in-memory TCM seeded from the mock TCM's YAML. `--memory` keeps run state in memory instead of Postgres. Artefacts for every attempt land in `artifacts/runs/<runId>/`.
 
-| Variable               | Default                                         |
-| ---------------------- | ----------------------------------------------- |
-| `DATABASE_URL`         | `postgres://aiqa:aiqa@localhost:5432/pipeline`  |
-| `TCM_URL`              | `http://localhost:4000`                         |
-| `LLM_PROVIDER`         | `replay` (`failing`, and `ollama` from phase 6) |
-| `LLM_SCENARIO`         | scenario name for the replay provider           |
-| `MAX_ATTEMPTS`         | `3`                                             |
-| `MAX_DEFERRALS`        | `3`                                             |
-| `CONTEXT_TOKEN_BUDGET` | `6000`                                          |
-| `PROMPT_VERSION`       | `v1` (a folder under `prompts/`)                |
-| `PORT`                 | `5000` for the HTTP API                         |
+| Variable               | Default                                                   |
+| ---------------------- | --------------------------------------------------------- |
+| `DATABASE_URL`         | `postgres://aiqa:aiqa@localhost:5432/pipeline`            |
+| `TCM_URL`              | `http://localhost:4000`                                   |
+| `LLM_PROVIDER`         | `replay`, `failing` or `ollama`                           |
+| `LLM_SCENARIO`         | scenario name for the replay provider                     |
+| `LLM_MODEL`            | `qwen2.5-coder:7b` (any Ollama model that supports tools) |
+| `OLLAMA_URL`           | `http://localhost:11434`                                  |
+| `LLM_TIMEOUT_MS`       | `600000`, ten minutes, because CPU inference is slow      |
+| `NUM_CTX`              | `12288`, the context window requested from the model      |
+| `AGENT_MODE`           | `curated` or `agentic`                                    |
+| `MAX_TOOL_CALLS`       | `6` per attempt in agentic mode                           |
+| `MAX_ATTEMPTS`         | `3`                                                       |
+| `MAX_DEFERRALS`        | `3`                                                       |
+| `CONTEXT_TOKEN_BUDGET` | `6000`                                                    |
+| `PROMPT_VERSION`       | `v1` (a folder under `prompts/`)                          |
+| `PORT`                 | `5000` for the HTTP API                                   |
+
+## With a real model
+
+```bash
+ollama serve                     # if it is not already running
+ollama pull qwen2.5-coder:7b     # once, about 4.7 GB
+npm run pipeline -- run --provider ollama --case TC-014 --tcm fake --memory
+npm run pipeline -- run --provider ollama --mode agentic --case TC-014 --tcm fake --memory
+npm run pipeline -- bench --provider ollama --out docs/results.md
+```
+
+**Curated** mode is what phase 5 built: the orchestrator decides everything the model sees and asks for constrained JSON output. **Agentic** mode gives the model the seven framework-context MCP tools on top of the same context; it may look things up before answering, every call is logged on the attempt, and the final answer goes through the same gates. The mode actually used is recorded on each attempt, because a provider that cannot call tools falls back to curated.
+
+The health check confirms Ollama is up and the model is pulled; if not, the run is deferred rather than failed, and the message says which command to run.
 
 ## How a run goes
 

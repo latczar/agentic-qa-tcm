@@ -79,11 +79,12 @@ class ScriptedGates implements Gates {
 }
 
 let context: ContextBuilder;
+let framework: FrameworkClient;
 let prompts: Awaited<ReturnType<typeof loadPrompts>>;
 
 beforeAll(async () => {
   const manifest = await loadManifest();
-  const framework = await FrameworkClient.inProcess(manifest, DEFAULT_FRAMEWORK_ROOT);
+  framework = await FrameworkClient.inProcess(manifest, DEFAULT_FRAMEWORK_ROOT);
   prompts = await loadPrompts(path.join(repoRoot, 'prompts'), 'v1');
   context = new ContextBuilder(framework, manifest, prompts, 6000);
 });
@@ -108,6 +109,9 @@ function deps(
     frameworkRoot: path.join(repoRoot, 'artifacts', 'unit-framework'),
     maxAttempts: 3,
     maxDeferrals: 3,
+    framework,
+    mode: 'curated',
+    maxToolCalls: 6,
     ...overrides,
   };
 }

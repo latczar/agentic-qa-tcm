@@ -5,6 +5,7 @@ import { FrameworkClient } from './context/framework-client.js';
 import { loadPrompts } from './context/prompts.js';
 import { RealGates } from './gates/runner.js';
 import { FailingProvider } from './llm/failing-provider.js';
+import { OllamaProvider } from './llm/ollama-provider.js';
 import type { LlmProvider } from './llm/provider.js';
 import { ReplayProvider } from './llm/replay-provider.js';
 import { FileArtefactStore } from './pipeline/artefacts.js';
@@ -42,12 +43,15 @@ export async function wire(
     provider,
     runs,
     context: new ContextBuilder(framework, manifest, prompts, config.contextTokenBudget),
+    framework,
     gates: new RealGates(manifest, config.frameworkRoot),
     artefacts: new FileArtefactStore(config.artifactsDir),
     prompts,
     frameworkRoot: config.frameworkRoot,
     maxAttempts: config.maxAttempts,
     maxDeferrals: config.maxDeferrals,
+    mode: config.mode,
+    maxToolCalls: config.maxToolCalls,
     scenario: options.scenario,
     log: options.log ?? ((m) => console.log(m)),
     close: async () => {
@@ -63,15 +67,21 @@ export async function providerFromConfig(
 ): Promise<LlmProvider> {
   switch (config.provider) {
     case 'replay':
-      if (!scenario)
+      if (!scenario) {
         throw new Error(
           'The replay provider needs a scenario (--scenario <name> or LLM_SCENARIO).',
         );
+      }
       return ReplayProvider.load(config.scenariosDir, scenario);
     case 'failing':
       return new FailingProvider('unavailable');
     case 'ollama':
-      throw new Error('The Ollama provider arrives in phase 6.');
+      return new OllamaProvider({
+        baseUrl: config.ollamaUrl,
+        model: config.model,
+        timeoutMs: config.llmTimeoutMs,
+        numCtx: config.numCtx,
+      });
   }
 }
 

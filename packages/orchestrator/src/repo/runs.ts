@@ -186,8 +186,8 @@ export class PgRunRepository implements RunRepository {
   async addAttempt(a: GenerationAttempt) {
     await this.db.query(
       `INSERT INTO generation_attempts
-         (run_id, attempt_no, kind, prompt_version, context_receipt, prompt, raw_response, parsed_ok, gate_report, failure_class, self_report, duration_ms)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+         (run_id, attempt_no, kind, prompt_version, context_receipt, prompt, raw_response, parsed_ok, gate_report, failure_class, self_report, duration_ms, mode, agent_log, prompt_tokens, completion_tokens)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
       [
         a.runId,
         a.attemptNo,
@@ -201,6 +201,10 @@ export class PgRunRepository implements RunRepository {
         a.failureClass,
         a.selfReport ? JSON.stringify(a.selfReport) : null,
         a.durationMs,
+        a.mode,
+        JSON.stringify(a.agentLog),
+        a.promptTokens,
+        a.completionTokens,
       ],
     );
   }
@@ -222,6 +226,10 @@ export class PgRunRepository implements RunRepository {
       gateReport: r.gate_report as GenerationAttempt['gateReport'],
       failureClass: r.failure_class as GenerationAttempt['failureClass'],
       selfReport: r.self_report as GenerationAttempt['selfReport'],
+      mode: (r.mode as GenerationAttempt['mode']) ?? 'curated',
+      agentLog: (r.agent_log as GenerationAttempt['agentLog']) ?? [],
+      promptTokens: (r.prompt_tokens as number | null) ?? null,
+      completionTokens: (r.completion_tokens as number | null) ?? null,
       durationMs: r.duration_ms as number,
     }));
   }

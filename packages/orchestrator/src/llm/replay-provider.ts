@@ -25,6 +25,7 @@ export interface Scenario {
  */
 export class ReplayProvider implements LlmProvider {
   readonly name = 'replay';
+  readonly supportsTools = false;
   readonly model: string;
   private served = 0;
 

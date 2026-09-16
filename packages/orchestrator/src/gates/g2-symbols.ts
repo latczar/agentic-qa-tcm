@@ -18,10 +18,18 @@ export function gateSymbols(
   const errors: GateError[] = [];
   const symbols = symbolsOf(manifest);
   const byField = new Map<string, PageObjectInfo>();
+  const fieldByClassName = new Map<string, string>();
   for (const a of manifest.app) {
     const po = manifest.pageObjects.find((p) => p.name === a.className);
     if (po) byField.set(a.field, po);
+    fieldByClassName.set(a.className, a.field);
   }
+  /** "LeavePage.expectRemaining" -> "app.leave.expectRemaining", the form a spec actually uses. */
+  const asAppCall = (symbolId: string): string => {
+    const [owner, member] = symbolId.split('.');
+    const field = owner ? fieldByClassName.get(owner) : undefined;
+    return field ? `app.${field}.${member}` : symbolId;
+  };
   const fixtureNames = new Set(manifest.fixtures.map((f) => f.name));
   const userKeys = new Set(manifest.users.map((u) => u.key));
   const seededKeys = new Set(manifest.seeded.map((s) => s.key));
@@ -42,10 +50,12 @@ export function gateSymbols(
     const method = po.methods.find((m) => m.name === ref.member);
     const locator = po.locators.find((l) => l.name === ref.member);
     if (!method && !locator) {
+      // Search every page object, not just this one: the model often has the right method
+      // name but the wrong object (e.g. app.leaveForm.expectRemaining instead of app.leave.expectRemaining).
       const suggestions = didYouMean(
-        symbols.filter((s) => s.owner === po.name),
+        symbols.filter((s) => s.kind === 'method' || s.kind === 'locator'),
         ref.member,
-      );
+      ).map(asAppCall);
       errors.push({
         code: 'UNKNOWN_MEMBER',
         line: ref.line,
