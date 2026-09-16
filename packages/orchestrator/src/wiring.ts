@@ -9,6 +9,7 @@ import { OllamaProvider } from './llm/ollama-provider.js';
 import type { LlmProvider } from './llm/provider.js';
 import { ReplayProvider } from './llm/replay-provider.js';
 import { FileArtefactStore } from './pipeline/artefacts.js';
+import { NullEventEmitter, WebhookEventEmitter, type EventEmitter } from './pipeline/events.js';
 import type { PipelineDeps } from './pipeline/run-pipeline.js';
 import { InMemoryRunRepository, PgRunRepository, type RunRepository } from './repo/runs.js';
 import type { TcmClient } from './tcm/client.js';
@@ -19,6 +20,7 @@ export interface WiringOptions {
   provider?: LlmProvider;
   tcm?: TcmClient;
   runs?: RunRepository;
+  events?: EventEmitter;
   scenario?: string;
   log?: (message: string) => void;
 }
@@ -37,6 +39,12 @@ export async function wire(
     options.runs ??
     (await PgRunRepository.connect(config.databaseUrl, new URL('../schema.sql', import.meta.url)));
   const tcm = options.tcm ?? new HttpTcmClient(config.tcmUrl);
+  const log = options.log ?? ((m: string) => console.log(m));
+  const events =
+    options.events ??
+    (config.eventsWebhookUrl
+      ? new WebhookEventEmitter(config.eventsWebhookUrl, log)
+      : new NullEventEmitter());
 
   return {
     tcm,
@@ -52,8 +60,10 @@ export async function wire(
     maxDeferrals: config.maxDeferrals,
     mode: config.mode,
     maxToolCalls: config.maxToolCalls,
+    events,
+    publicUrl: config.publicUrl,
     scenario: options.scenario,
-    log: options.log ?? ((m) => console.log(m)),
+    log,
     close: async () => {
       await framework.close();
       if (ownsRuns && runs instanceof PgRunRepository) await runs.close();

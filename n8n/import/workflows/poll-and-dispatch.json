@@ -1,0 +1,76 @@
+{
+  "id": "aiqa-poll-and-dispatch",
+  "name": "AI QA — poll and dispatch",
+  "active": true,
+  "nodes": [
+    {
+      "id": "aiqa-pad-trigger",
+      "name": "Every 2 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 2 }]
+        }
+      }
+    },
+    {
+      "id": "aiqa-pad-get-cases",
+      "name": "Get ready cases",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [460, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:4000/api/cases",
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [{ "name": "automation_status", "value": "READY_FOR_AUTOMATION" }]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "aiqa-pad-split",
+      "name": "One case at a time",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "parameters": {
+        "fieldToSplitOut": "cases"
+      }
+    },
+    {
+      "id": "aiqa-pad-create-run",
+      "name": "Create run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [900, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:5000/runs",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"test_case_id\": $json.id } }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Every 2 minutes": {
+      "main": [[{ "node": "Get ready cases", "type": "main", "index": 0 }]]
+    },
+    "Get ready cases": {
+      "main": [[{ "node": "One case at a time", "type": "main", "index": 0 }]]
+    },
+    "One case at a time": {
+      "main": [[{ "node": "Create run", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

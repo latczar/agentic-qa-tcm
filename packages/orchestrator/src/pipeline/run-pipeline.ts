@@ -29,6 +29,7 @@ import type { RunRepository } from '../repo/runs.js';
 import type { TcmClient } from '../tcm/client.js';
 import { generate, type AgentLogEntry, type ContextMode } from './agent.js';
 import type { ArtefactStore } from './artefacts.js';
+import { toRunEvent, type EventEmitter } from './events.js';
 import { feedbackFrom } from './feedback.js';
 
 export interface PipelineDeps {
@@ -46,6 +47,8 @@ export interface PipelineDeps {
   maxDeferrals: number;
   mode: ContextMode;
   maxToolCalls: number;
+  events: EventEmitter;
+  publicUrl: string;
   /** For the replay provider: which scenario is playing. */
   scenario?: string;
   log?: (message: string) => void;
@@ -92,10 +95,12 @@ export async function executeRun(deps: PipelineDeps, runId: string): Promise<Gen
     const claim = await deps.tcm.claim(run.testCaseId, run.testCaseVersion, run.id);
     if (!claim.ok) {
       log(`${run.id}: could not claim ${run.testCaseId}: ${claim.message}`);
-      return deps.runs.update(run.id, {
+      const failed = await deps.runs.update(run.id, {
         status: RunStatus.NEEDS_ATTENTION,
         summary: `Could not claim ${run.testCaseId} at version ${run.testCaseVersion}: ${claim.message}`,
       });
+      await deps.events.emit(toRunEvent('run.needs_attention', failed, deps.publicUrl));
+      return failed;
     }
     testCase = claim.testCase;
   } else {
@@ -243,6 +248,7 @@ export async function executeRun(deps: PipelineDeps, runId: string): Promise<Gen
           note: run.summary,
         });
         await deps.artefacts.summary(run, summaryText(run, report));
+        await deps.events.emit(toRunEvent('run.pending_review', run, deps.publicUrl));
         log(`${run.id}: PENDING_REVIEW after ${attemptNo} attempt(s)`);
         return run;
       }
@@ -305,6 +311,7 @@ export async function executeRun(deps: PipelineDeps, runId: string): Promise<Gen
       note: summary,
     });
     await deps.artefacts.summary(run, summaryText(run, report));
+    await deps.events.emit(toRunEvent('run.needs_attention', run, deps.publicUrl));
     log(`${run.id}: NEEDS_ATTENTION (${failureClass})`);
     return run;
   }
@@ -328,12 +335,14 @@ async function defer(
   );
   if (decision.action === 'defer') {
     log(`${run.id}: deferred (${deferrals}/${deps.maxDeferrals}): ${error.message}`);
-    return deps.runs.update(run.id, {
+    const deferred = await deps.runs.update(run.id, {
       status: RunStatus.DEFERRED,
       deferrals,
       failureClass,
       summary: `Deferred ${deferrals} time(s): ${error.message}`,
     });
+    await deps.events.emit(toRunEvent('run.deferred', deferred, deps.publicUrl));
+    return deferred;
   }
   const summary = `Model unavailable ${deferrals} times; giving up. Last error: ${error.message}`;
   const updated = await deps.runs.update(run.id, {
@@ -346,6 +355,7 @@ async function defer(
     status: TcmAutomationStatus.NEEDS_ATTENTION,
     note: summary,
   });
+  await deps.events.emit(toRunEvent('run.needs_attention', updated, deps.publicUrl));
   log(`${run.id}: NEEDS_ATTENTION (model unavailable)`);
   return updated;
 }
