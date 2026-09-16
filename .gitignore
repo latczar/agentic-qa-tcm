@@ -8,3 +8,10 @@ dist/
 node_modules/
 playwright-report/
 test-results/
+
+# AI candidates awaiting human review. Runtime state, not source: a candidate either gets
+# promoted into tests/e2e/<feature>/ on approval (properly tracked there) or stays rejected —
+# never committed as-is. Without this, any git add -A after a manual pipeline run risks sweeping
+# up whatever candidate happens to be sitting here.
+packages/e2e-framework/tests/generated/*
+!packages/e2e-framework/tests/generated/.gitkeep
