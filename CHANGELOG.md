@@ -2,6 +2,10 @@
 
 One entry per phase tag. Each phase ends with something runnable and tested — see `docs/ARCHITECTURE.md` §14 for the full roadmap and `docs/talking-points.md` for the reasoning behind each decision.
 
+## phase-10 — 2026-09-16
+
+Polish. README rewritten from its phase-0 skeleton state: the pitch, an explicit "why this is not prompt-to-code" section, a quickstart that runs the whole loop without a model install, a 12-row failure gallery verified against the real scenario fixtures (one outcome was wrong in the aspirational version of this table and is corrected here), the honest phase 6 results, and a section that says outright what's missing rather than leaving it implied. Four ADRs added for the decisions a reviewer would question (n8n as glue not brain, no embeddings, replay provider, framework manifest as source of truth), plus a CHANGELOG. The demo GIF was recorded live against the real running stack, not staged — which is also how a real gap in `.gitignore` was found and fixed: `tests/generated/` candidates were never actually ignored, so a stray one from earlier manual testing had been sitting there ready to be swept into the next `git add -A`.
+
 ## phase-9 — 2026-09-16
 
 CI hardening. Verified against a real GitHub Actions run rather than just the YAML: `checks`, `framework-e2e` and `integration` all green on first push, a manual (`workflow_dispatch`-only) Ollama bench job that never gates a merge, artefacts confirmed downloadable from the run.
