@@ -1,10 +1,35 @@
-import { mkdir, rename } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { RunStatus, TcmAutomationStatus } from '@aiqa/shared';
 import type { GenerationRun } from '../domain/types.js';
 import type { RunRepository } from '../repo/runs.js';
 import type { TcmClient } from '../tcm/client.js';
 import { toRunEvent, type EventEmitter } from './events.js';
+
+/**
+ * A candidate's relative imports (e.g. '../../src/fixtures/test.js') are only correct for its
+ * depth inside tests/generated/. Promotion moves the file to tests/e2e/<feature>/, one directory
+ * deeper, so a plain rename would silently leave every import pointing at the wrong place. This
+ * recomputes each relative specifier from where the file actually ends up, rather than assuming
+ * a fixed depth difference.
+ */
+export function rewriteRelativeImports(
+  code: string,
+  fromAbsPath: string,
+  toAbsPath: string,
+): string {
+  const fromDir = path.dirname(fromAbsPath);
+  const toDir = path.dirname(toAbsPath);
+  return code.replace(
+    /from\s+(['"])(\.\.?\/[^'"]+)\1/g,
+    (match: string, quote: string, specifier: string) => {
+      const target = path.resolve(fromDir, specifier);
+      const rewritten = path.relative(toDir, target).split(path.sep).join('/');
+      const specWithPrefix = rewritten.startsWith('.') ? rewritten : `./${rewritten}`;
+      return `from ${quote}${specWithPrefix}${quote}`;
+    },
+  );
+}
 
 export interface ReviewDeps {
   runs: RunRepository;
@@ -65,8 +90,11 @@ export async function applyReview(
   const fileName = path.basename(reviewed.candidatePath);
   const destRel = path.join('tests', 'e2e', testCase.feature, fileName).split(path.sep).join('/');
   const destAbs = path.join(deps.frameworkRoot, destRel);
+  const srcAbs = path.join(deps.frameworkRoot, reviewed.candidatePath);
   await mkdir(path.dirname(destAbs), { recursive: true });
-  await rename(path.join(deps.frameworkRoot, reviewed.candidatePath), destAbs);
+  const code = await readFile(srcAbs, 'utf8');
+  await writeFile(destAbs, rewriteRelativeImports(code, srcAbs, destAbs), 'utf8');
+  await rm(srcAbs);
 
   await deps.tcm.report(reviewed.testCaseId, {
     status: TcmAutomationStatus.AUTOMATED,
