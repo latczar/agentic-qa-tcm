@@ -1,0 +1,92 @@
+{
+  "id": "aiqa-deferred-watcher",
+  "name": "AI QA — deferred watcher",
+  "active": true,
+  "nodes": [
+    {
+      "id": "aiqa-dw-trigger",
+      "name": "Every 5 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 5 }]
+        }
+      }
+    },
+    {
+      "id": "aiqa-dw-get-runs",
+      "name": "Get all runs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [460, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:5000/runs",
+        "options": {}
+      }
+    },
+    {
+      "id": "aiqa-dw-find-stale",
+      "name": "Find stale deferred runs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const STALE_AFTER_MINUTES = 10;\nconst runs = $input.first().json.runs ?? [];\nconst now = Date.now();\nreturn runs\n  .filter((r) => r.status === 'DEFERRED')\n  .filter((r) => (now - new Date(r.updatedAt).getTime()) / 60000 >= STALE_AFTER_MINUTES)\n  .map((r) => ({ json: r }));"
+      }
+    },
+    {
+      "id": "aiqa-dw-retry",
+      "name": "Retry run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [900, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:5000/runs/{{ $json.id }}/retry",
+        "options": {}
+      }
+    },
+    {
+      "id": "aiqa-dw-email",
+      "name": "Notify retried",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1120, 300],
+      "parameters": {
+        "fromEmail": "ai-qa-pipeline@local.test",
+        "toEmail": "reviewer@local.test",
+        "subject": "=AI-QA: deferred run retried — {{$json.run.testCaseId}} v{{$json.run.testCaseVersion}}",
+        "emailFormat": "text",
+        "text": "=Run {{$json.run.id}} for {{$json.run.testCaseId}} v{{$json.run.testCaseVersion}} was stuck DEFERRED and has been automatically retried.\n\nCheck the outcome: http://localhost:5000/runs/{{$json.run.id}}",
+        "options": {}
+      },
+      "credentials": {
+        "smtp": {
+          "id": "aiqa-mailpit-smtp",
+          "name": "Mailpit (local)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 5 minutes": {
+      "main": [[{ "node": "Get all runs", "type": "main", "index": 0 }]]
+    },
+    "Get all runs": {
+      "main": [[{ "node": "Find stale deferred runs", "type": "main", "index": 0 }]]
+    },
+    "Find stale deferred runs": {
+      "main": [[{ "node": "Retry run", "type": "main", "index": 0 }]]
+    },
+    "Retry run": {
+      "main": [[{ "node": "Notify retried", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

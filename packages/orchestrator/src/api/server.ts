@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import express from 'express';
+import { RunStatus } from '@aiqa/shared';
 import { loadConfig } from '../config.js';
 import { parseGeneratedTest } from '../domain/output-schema.js';
 import { executeRun, startRun, type PipelineDeps } from '../pipeline/run-pipeline.js';
@@ -13,6 +14,7 @@ import { wire } from '../wiring.js';
  *   POST /runs { test_case_id, version?, scenario? }  -> 202 created | 200 existing (idempotent)
  *   GET  /runs                                        -> recent runs
  *   GET  /runs/:id                                    -> run with attempts
+ *   POST /runs/:id/retry                              -> resume a DEFERRED run
  *   POST /runs/:id/review { decision, reviewer, comment? } -> approve/reject (JSON, for n8n)
  *   GET  /review, GET /review/:id                     -> human review pages
  *   POST /review/:id/decide                           -> the review page's approve/reject form
@@ -60,6 +62,24 @@ export function createApi(getDeps: (scenario?: string) => Promise<PipelineDeps>)
       return;
     }
     res.json({ run, attempts: await deps.runs.attempts(run.id) });
+  });
+
+  // Resumes a DEFERRED run in place: same run id, no re-claim, picks up where executeRun left off.
+  app.post('/runs/:id/retry', async (req, res) => {
+    const deps = await getDeps();
+    const run = await deps.runs.get(req.params.id);
+    if (!run) {
+      res.status(404).json({ error: 'not found' });
+      return;
+    }
+    if (run.status !== RunStatus.DEFERRED) {
+      res.status(409).json({ error: `run is ${run.status}, not DEFERRED` });
+      return;
+    }
+    queue = queue.then(() =>
+      executeRun(deps, run.id).catch((e) => deps.log?.(`run ${run.id} crashed: ${String(e)}`)),
+    );
+    res.status(202).json({ run });
   });
 
   // JSON review decision, for n8n and scripts.
