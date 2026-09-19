@@ -70,10 +70,16 @@ export function leaveRoutes(store: InMemoryStore): Router {
       renderForm(res, 422, values, result.errors, remaining);
       return;
     }
-    const created = store.addLeave({ employeeId: user.id, ...result.value });
+    // Sabotage for G6: pretend to accept the request but never actually store it. The response
+    // is identical either way, so only a test that checks the balance or the request list (not
+    // just the success message) will notice. Test-only; there is no legitimate reason a real
+    // client would send this header.
+    if (req.header('X-Sabotage') !== 'leave.submit') {
+      store.addLeave({ employeeId: user.id, ...result.value });
+    }
     setFlash(req, {
       kind: 'success',
-      message: `Leave request submitted for approval (${created.workingDays} working ${plural(created.workingDays, 'day')}).`,
+      message: `Leave request submitted for approval (${result.value.workingDays} working ${plural(result.value.workingDays, 'day')}).`,
     });
     res.redirect('/leave');
   });

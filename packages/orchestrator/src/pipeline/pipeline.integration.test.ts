@@ -51,6 +51,8 @@ describe.each(scenarioNames)('scenario %s', (name) => {
         failureClasses: string[];
         tcmStatus: string;
         runFailureClass?: string;
+        /** Last gate that ran, when it matters that G6 actually engaged (not just G0-G5). */
+        finalGate?: string;
       };
     };
 
@@ -86,14 +88,12 @@ describe.each(scenarioNames)('scenario %s', (name) => {
       if (done.status === 'PENDING_REVIEW') {
         expect(done.candidatePath).toMatch(/^tests\/generated\/tc-014-.*\.spec\.ts$/);
         const last = attempts.at(-1)!;
-        expect(last.gateReport?.results.map((r) => r.gate)).toEqual([
-          'G0',
-          'G1',
-          'G2',
-          'G3',
-          'G4',
-          'G5',
-        ]);
+        const gates = last.gateReport?.results.map((r) => r.gate) ?? [];
+        // G6 only runs for a candidate that actually touches the sabotaged feature, and only
+        // ever appends after G5 — so either G0-G5, or G0-G5 followed by a passing G6.
+        expect(gates.slice(0, 6)).toEqual(['G0', 'G1', 'G2', 'G3', 'G4', 'G5']);
+        expect(gates.length === 6 || (gates.length === 7 && gates[6] === 'G6')).toBe(true);
+        if (meta.expect.finalGate) expect(gates.at(-1)).toBe(meta.expect.finalGate);
         // Clean up the accepted candidate so the next scenario starts from an empty generated folder.
         await rm(path.join(config.frameworkRoot, done.candidatePath!), { force: true });
       }

@@ -33,6 +33,7 @@ export function decide(
     case FailureClass.TYPE_ERROR:
     case FailureClass.LINT_ERROR:
     case FailureClass.EXECUTION_FAILURE:
+    case FailureClass.WEAK_ASSERTION:
       return attemptsUsed < maxAttempts ? { action: 'retry', kind: 'retry' } : { action: 'stop' };
   }
 }

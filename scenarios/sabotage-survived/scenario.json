@@ -1,0 +1,11 @@
+{
+  "description": "Passes G0-G5 on attempt 1 but only checks the surface success message; G6 sabotages leave submission and the test doesn't notice. Attempt 2 asserts the real outcome and passes G6.",
+  "testCaseId": "TC-014",
+  "expect": {
+    "finalStatus": "PENDING_REVIEW",
+    "attempts": 2,
+    "failureClasses": ["WEAK_ASSERTION"],
+    "tcmStatus": "PENDING_REVIEW",
+    "finalGate": "G6"
+  }
+}

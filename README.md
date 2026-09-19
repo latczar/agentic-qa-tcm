@@ -4,7 +4,7 @@
 
 Local, free, AI-assisted Playwright test generation with deterministic validation and human review.
 
-A TestRail-style mock TCM holds manual test cases. When a tester marks one Ready for Automation, n8n notices and dispatches it to a TypeScript orchestrator. The orchestrator builds context about the test framework through an MCP server, asks a local model (Ollama) for a structured test, runs the result through six validation gates (response schema, framework structure, symbol existence, TypeScript, ESLint, real Playwright execution — twice, to catch flakiness), retries with specific feedback when a gate fails, and parks the candidate for a human to approve or reject before the TCM is updated and the reviewer is emailed.
+A TestRail-style mock TCM holds manual test cases. When a tester marks one Ready for Automation, n8n notices and dispatches it to a TypeScript orchestrator. The orchestrator builds context about the test framework through an MCP server, asks a local model (Ollama) for a structured test, runs the result through six validation gates (response schema, framework structure, symbol existence, TypeScript, ESLint, real Playwright execution — twice, to catch flakiness) plus a seventh negative-control gate for features that have one (deliberately break the feature and require the test to notice), retries with specific feedback when a gate fails, and parks the candidate for a human to approve or reject before the TCM is updated and the reviewer is emailed.
 
 Full design in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), the reasoning behind each contested decision in [docs/adr](docs/adr), and an interview-ready Q&A trail of what was actually found while building it in [docs/talking-points.md](docs/talking-points.md).
 
@@ -17,6 +17,7 @@ The model is one component in a system that would still be worth building if the
 - **Context retrieval is a lookup table and keyword overlap, not embeddings.** The framework is small and structured enough that a vector database would be solving a problem this project doesn't have. See [ADR-0003](docs/adr/0003-no-embeddings-deterministic-retrieval-instead.md).
 - **A human decides, not a threshold.** Every candidate that passes every gate still waits for a person to approve or reject it before anything is promoted into the real suite or reported back to the TCM.
 - **Nothing is stubbed inside the validation path.** If a gate says a test passes, it ran in a real browser against the real (mock) application.
+- **A test that passes for the wrong reason is still rejected.** G6 deliberately breaks a feature the candidate touches and re-runs it; a test that doesn't notice never checked anything real to begin with — see [ADR-0006](docs/adr/0006-sabotage-gate-scoped-to-one-feature.md).
 
 ## Architecture
 
@@ -91,7 +92,7 @@ To use a real model instead of the replay provider, install [Ollama](https://oll
 
 ## Failure gallery
 
-Twelve deliberate failure fixtures under `scenarios/`, each a real test in `packages/orchestrator/src/pipeline/pipeline.integration.test.ts` running the actual pipeline against real Postgres, `tsc`, ESLint and Playwright — no mocking inside the gates themselves.
+Thirteen deliberate failure fixtures under `scenarios/`, each a real test in `packages/orchestrator/src/pipeline/pipeline.integration.test.ts` running the actual pipeline against real Postgres, `tsc`, ESLint and Playwright — no mocking inside the gates themselves.
 
 | Scenario                                                 | What the model does                                                  | Caught by                            | Outcome                                                                                                                       |
 | -------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -107,6 +108,7 @@ Twelve deliberate failure fixtures under `scenarios/`, each a real test in `pack
 | [`flaky`](scenarios/flaky)                               | Passes once, fails on the required repeat run                        | G5 (executed twice on purpose)       | `NEEDS_ATTENTION` — a flaky test is a finding, never silently retried                                                         |
 | [`exhausted`](scenarios/exhausted)                       | Keeps inventing the same broken method on every attempt              | G2, three times running              | `NEEDS_ATTENTION` after 3 attempts, best attempt kept for a human                                                             |
 | [`llm-unavailable`](scenarios/llm-unavailable)           | The model server doesn't respond                                     | provider health check                | `DEFERRED` with no attempt spent, case stays claimed, event emitted, n8n auto-retries it if it's still stuck 10 minutes later |
+| [`sabotage-survived`](scenarios/sabotage-survived)       | Test checks only the success message, never the real outcome         | G6 (negative control)                | retried with a hint to assert on the real effect, `PENDING_REVIEW`                                                            |
 
 ## Results against a real local model
 
@@ -121,18 +123,19 @@ Full write-up, numbers and the two bugs found: [docs/results.md](docs/results.md
 - [ADR-0003](docs/adr/0003-no-embeddings-deterministic-retrieval-instead.md): deterministic retrieval instead of embeddings.
 - [ADR-0004](docs/adr/0004-replay-provider-for-deterministic-testing.md): a replay provider is the primary way the pipeline is tested.
 - [ADR-0005](docs/adr/0005-framework-manifest-as-single-source-of-truth.md): the framework manifest is a committed, drift-checked artefact.
+- [ADR-0006](docs/adr/0006-sabotage-gate-scoped-to-one-feature.md): the sabotage gate covers one named feature, not a generic mutation-testing framework.
 
 ## Honest limitations
 
 - **The free local model rarely passes from scratch.** See Results above. The gates and human review exist precisely because of this, not despite it.
 - **Context retrieval is rule-based and would need rework at scale.** Fine for one framework with a dozen page objects; the keyword-overlap heuristic degrades as the vocabulary gets noisier on a much larger codebase (ADR-0003).
-- **No sabotage gate (G6) yet.** The plan called for a stretch gate that deliberately breaks the application under test and checks that a generated test actually notices — not built, and unlike an earlier draft of this section claimed, the HR Portal doesn't have a sabotage header wired in yet either. Both are still to do.
+- **The sabotage gate (G6) only covers one feature.** Leave submission has a sabotage flag; nothing else does yet. A generated test for any other feature could still have the same "checks only the surface response" flaw with no gate to catch it (ADR-0006).
 - **hr-portal, mock-tcm and the orchestrator run on the host, not in Compose.** Only Postgres, n8n and Mailpit are containerised. A "full compose" mode (orchestrator image based on the official Playwright image, so browsers are present) is the natural next step, not yet built.
 - **Single reviewer, no auth.** The review UI and n8n itself have no real user accounts. Fine for a local demo; a real deployment needs both.
 
 ## What's next
 
-- G6 sabotage gate: add a sabotage header to the HR Portal that deliberately breaks one feature, then confirm a generated test actually fails when it's used.
+- Extend the sabotage gate (G6) to more features than just leave submission.
 - Full Docker Compose mode: hr-portal, mock-tcm and the orchestrator as containers, so `docker compose up` alone is the entire quickstart.
 - A TCM MCP server, so an IDE agent could query manual test case state the same way the orchestrator queries the framework.
 - Branch-based review: promote an approved candidate to a git branch instead of a direct file move, so review can happen as a normal pull request.

@@ -78,7 +78,7 @@ export interface ContextReceipt {
   dropped: string[];
 }
 
-export type GateId = 'G0' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
+export type GateId = 'G0' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5' | 'G6';
 
 export interface GateError {
   code: string;

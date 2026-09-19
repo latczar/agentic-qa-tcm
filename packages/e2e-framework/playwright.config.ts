@@ -19,6 +19,9 @@ export default defineConfig({
     baseURL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    // G6 sets SABOTAGE to a feature id (e.g. "leave.submit") to re-run a candidate against a
+    // deliberately broken app and confirm it actually notices. Unset for every other run.
+    extraHTTPHeaders: process.env.SABOTAGE ? { 'X-Sabotage': process.env.SABOTAGE } : undefined,
   },
   projects: [
     // Handwritten suite. This is what CI runs and what the agent learns from.
