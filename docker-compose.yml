@@ -42,6 +42,7 @@ services:
         n8n import:workflow --separate --input=/import/workflows
         n8n publish:workflow --id=aiqa-poll-and-dispatch
         n8n publish:workflow --id=aiqa-run-events-router
+        n8n publish:workflow --id=aiqa-deferred-watcher
         exec n8n start
     extra_hosts:
       - 'host.docker.internal:host-gateway'
