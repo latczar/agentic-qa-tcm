@@ -104,7 +104,8 @@ describe('extractManifest', () => {
 
   it('indexes every example test with its title and tag', () => {
     const allTests = manifest.examples.flatMap((e) => e.tests);
-    expect(allTests.length).toBe(19);
+    // 19 hand-written + 4 AI-generated and approved (TC-004, TC-010, TC-030, TC-045).
+    expect(allTests.length).toBe(23);
     for (const t of allTests) expect(t.tags.some((tag) => /^@TC-\d+$/.test(tag))).toBe(true);
     const leave = manifest.examples.find((e) => e.path.includes('request-leave'));
     expect(leave).toMatchObject({ feature: 'leave', describe: 'Leave requests' });

@@ -7,7 +7,7 @@ import type { TestCase } from '../domain/types.js';
 import { InMemoryRunRepository } from '../repo/runs.js';
 import { FakeTcmClient } from '../tcm/fake-client.js';
 import type { EventEmitter, RunEvent } from './events.js';
-import { applyReview, type ReviewDeps } from './review.js';
+import { applyReview, rewriteRelativeImports, type ReviewDeps } from './review.js';
 
 /** Records every event so tests can assert what was announced, without a real HTTP server. */
 class SpyEventEmitter implements EventEmitter {
@@ -27,6 +27,23 @@ const tc014: TestCase = {
   steps: [{ action: 'Request sick leave', expected: 'Listed as pending, balance unchanged' }],
   testData: {},
 };
+
+describe('rewriteRelativeImports', () => {
+  it('recomputes a relative import for the new file depth', () => {
+    const code = "import { test, users } from '../../src/fixtures/test.js';\n";
+    const from = path.join('/repo', 'tests', 'generated', 'tc-014.spec.ts');
+    const to = path.join('/repo', 'tests', 'e2e', 'leave', 'tc-014.spec.ts');
+    expect(rewriteRelativeImports(code, from, to)).toBe(
+      "import { test, users } from '../../../src/fixtures/test.js';\n",
+    );
+  });
+
+  it('leaves code with no relative imports untouched', () => {
+    const from = path.join('/repo', 'tests', 'generated', 'tc-014.spec.ts');
+    const to = path.join('/repo', 'tests', 'e2e', 'leave', 'tc-014.spec.ts');
+    expect(rewriteRelativeImports('// candidate\n', from, to)).toBe('// candidate\n');
+  });
+});
 
 describe('applyReview', () => {
   let frameworkRoot: string;
@@ -102,6 +119,28 @@ describe('applyReview', () => {
       runId: run.id,
       reviewUrl: `http://localhost:5000/review/${run.id}`,
     });
+  });
+
+  it("rewrites the candidate's own relative imports so they still resolve after promotion", async () => {
+    await writeFile(
+      path.join(frameworkRoot, candidateRel),
+      "import { test, users } from '../../src/fixtures/test.js';\n\ntest('x', () => {});\n",
+      'utf8',
+    );
+    const run = await pendingRun();
+
+    const outcome = await applyReview(deps, run.id, {
+      decision: 'approve',
+      reviewer: 'lat',
+      comment: null,
+    });
+
+    expect(outcome.ok).toBe(true);
+    const promoted = await readFile(
+      path.join(frameworkRoot, 'tests', 'e2e', 'leave', 'tc-014-sick-leave.spec.ts'),
+      'utf8',
+    );
+    expect(promoted).toContain("from '../../../src/fixtures/test.js'");
   });
 
   it('reject leaves the candidate in place and reports NEEDS_ATTENTION', async () => {

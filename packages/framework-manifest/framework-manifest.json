@@ -2930,6 +2930,19 @@
       ]
     },
     {
+      "path": "tests/e2e/approvals/tc-030-manager-approves-leave.spec.ts",
+      "feature": "approvals",
+      "describe": "Manager approvals",
+      "tests": [
+        {
+          "title": "Manager approves a direct report's leave request",
+          "tags": [
+            "@TC-030"
+          ]
+        }
+      ]
+    },
+    {
       "path": "tests/e2e/auth/login.spec.ts",
       "feature": "auth",
       "describe": "Sign in",
@@ -2952,6 +2965,19 @@
             "@TC-003"
           ]
         },
+        {
+          "title": "Signing out returns to the sign-in page",
+          "tags": [
+            "@TC-004"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/e2e/auth/tc-004-signing-out.spec.ts",
+      "feature": "auth",
+      "describe": "Auth",
+      "tests": [
         {
           "title": "Signing out returns to the sign-in page",
           "tags": [
@@ -2987,6 +3013,19 @@
           "title": "Employee cannot open the add-employee form",
           "tags": [
             "@TC-043"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/e2e/employees/tc-045-reactivate-employee.spec.ts",
+      "feature": "employees",
+      "describe": "Employees",
+      "tests": [
+        {
+          "title": "A reactivated employee can sign in again",
+          "tags": [
+            "@TC-045"
           ]
         }
       ]
@@ -3043,6 +3082,19 @@
           "title": "Employee can cancel a pending request and the days return to the balance",
           "tags": [
             "@TC-013"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/e2e/leave/tc-010-short-slug.spec.ts",
+      "feature": "leave",
+      "describe": "Leave requests",
+      "tests": [
+        {
+          "title": "Employee can submit an annual leave request",
+          "tags": [
+            "@TC-010"
           ]
         }
       ]
