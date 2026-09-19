@@ -10,6 +10,7 @@ describe('decide', () => {
       F.TYPE_ERROR,
       F.LINT_ERROR,
       F.EXECUTION_FAILURE,
+      F.WEAK_ASSERTION,
     ]) {
       expect(decide(f, 1, 3, 0, 3)).toEqual({ action: 'retry', kind: 'retry' });
       expect(decide(f, 2, 3, 0, 3)).toEqual({ action: 'retry', kind: 'retry' });

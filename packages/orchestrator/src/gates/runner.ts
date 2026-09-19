@@ -1,12 +1,28 @@
 import { FailureClass } from '@aiqa/shared';
 import type { FrameworkManifest } from '@aiqa/framework-manifest';
 import type { GateReport, GateResult, SelfReport } from '../domain/types.js';
-import { analyseCode } from './analysis.js';
+import { analyseCode, type CodeAnalysis } from './analysis.js';
 import { gateEslint } from './g4-eslint.js';
 import { gateExecute } from './g5-execute.js';
+import { gateSabotage } from './g6-sabotage.js';
 import { gateStructure } from './g1-structure.js';
 import { gateSymbols } from './g2-symbols.js';
 import { gateTypescript } from './g3-typescript.js';
+
+/**
+ * G6 only makes sense for a candidate that actually exercises the sabotaged feature — sabotaging
+ * leave submission and running an unrelated (e.g. sign-in) test would prove nothing either way.
+ */
+const SABOTAGES: Array<{ id: string; field: string; member: string }> = [
+  { id: 'leave.submit', field: 'leaveForm', member: 'submitRequest' },
+];
+
+function relevantSabotage(analysis: CodeAnalysis): string | null {
+  const match = SABOTAGES.find((s) =>
+    analysis.appRefs.some((r) => r.field === s.field && r.member === s.member && r.isCall),
+  );
+  return match?.id ?? null;
+}
 
 export interface CandidateInput {
   testCaseId: string;
@@ -62,6 +78,13 @@ export class RealGates implements Gates {
     const g5 = await gateExecute(this.frameworkRoot, input.absPath);
     results.push(g5.result);
     if (!g5.result.passed) return fail(g5.failureClass ?? FailureClass.EXECUTION_FAILURE);
+
+    const sabotageId = relevantSabotage(analysis);
+    if (sabotageId) {
+      const g6 = await gateSabotage(this.frameworkRoot, input.absPath, sabotageId);
+      results.push(g6.result);
+      if (!g6.result.passed) return fail(g6.failureClass ?? FailureClass.WEAK_ASSERTION);
+    }
 
     return { report: { passed: true, results, failedGate: null, failureClass: null }, selfReport };
   }
